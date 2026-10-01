@@ -38,27 +38,25 @@
             text-transform: uppercase;
         }
 
+        /* محاذاة النص إلى اليسار ومطابقة مظهر الـ Device Key بالكامل */
         .info-box {
             background-color: #1a1a1a;
             padding: 15px;
             border-radius: 8px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-bottom: 25px;
             border: 1px solid #333333;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            text-align: left;
         }
 
         .key-label {
             color: #aaaaaa;
-            font-size: 1rem;
         }
 
         .key-value {
-            color: #ffcc00;
+            color: #00ffcc;
             font-weight: bold;
-            font-size: 1.4rem;
+            margin-left: 10px;
             letter-spacing: 1px;
         }
 
@@ -80,13 +78,12 @@
             background-color: #222222;
             border: 1px solid #444444;
             border-radius: 6px;
-            color: #00ffcc;
+            color: #ffffff;
             font-size: 1.1rem;
             text-align: center;
             box-sizing: border-box;
             outline: none;
             user-select: none;
-            font-weight: bold;
         }
 
         .btn-copy {
@@ -149,31 +146,30 @@
             if (typeof AndroidBridge !== "undefined" && typeof AndroidBridge.getMacAddress === "function") {
                 const macAddress = AndroidBridge.getMacAddress();
 
-                // عرض الماك الحقيقي في الصندوق العلوي
-                document.getElementById("macAddressDisplay").innerText = macAddress.toUpperCase();
-                
-                // إنشاء رابط التفعيل وحقنه داخل حقل النص الإدخالي
-                const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
-                document.getElementById("activeCode").value = finalUrl;
+                if(macAddress && macAddress !== "00:00:00:00:00:00") {
+                    // حقن الماك أدريس الحقيقي باللغة الإنجليزية في الواجهة بمحاذاة اليسار
+                    document.getElementById("macAddressDisplay").innerText = macAddress.toUpperCase();
+                    
+                    // تحديث حقل الرابط بالماك الحقيقي المستخرج من الـ SharedPreferences
+                    const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
+                    document.getElementById("activeCode").value = finalUrl;
 
-                const safeMacKey = macAddress.replace(/:/g, "").toUpperCase();
+                    const safeMacKey = macAddress.replace(/:/g, "").toUpperCase();
 
-                // حفظ البيانات في الفايربيس تلقائياً
-                set(ref(database, 'registered_devices/' + safeMacKey), {
-                    mac: macAddress,
-                    active_code: finalUrl,
-                    registeredAt: new Date().toISOString(),
-                    status: "active"
-                }).then(() => {
-                    console.log("Data loaded and saved to Firebase.");
-                }).catch((error) => {
-                    console.error("Firebase Error: ", error);
-                });
+                    // الرفع التلقائي إلى الفايربيس
+                    set(ref(database, 'registered_devices/' + safeMacKey), {
+                        mac: macAddress,
+                        active_code: finalUrl,
+                        registeredAt: new Date().toISOString(),
+                        status: "active"
+                    });
+                }
             }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(window.initAndroidDeviceData, 600);
+            // استدعاء فوري وسريع لضمان جلب البيانات دون تأخير
+            setTimeout(window.initAndroidDeviceData, 300);
         });
     </script>
 </head>
@@ -182,15 +178,15 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
-        <!-- صندوق عرض عنوان الماك المحدث فوق الحقل مباشرة -->
+        <!-- عرض الماك أدريس بالإنجليزية ومحاذاة لليسار -->
         <div class="info-box">
-            <span class="key-label">عنوان ماك</span>
+            <span class="key-label">MAC Address:</span>
             <span class="key-value" id="macAddressDisplay">00:00:00:00:00:00</span>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="جاري استخراج الرابط..." readonly>
+            <input type="text" id="activeCode" value="Extracting Link..." readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
