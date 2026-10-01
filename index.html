@@ -50,13 +50,13 @@
             font-size: 0.95rem;
         }
 
-        /* تنسيق موحد ومطابق 100% لكلا الحقلين لضمان التطابق البصري التام */
         input[type="text"] {
             width: 100%;
             padding: 12px;
             background-color: #222222;
             border: 1px solid #444444;
             border-radius: 6px;
+            color: #ffffff;
             font-size: 1.1rem;
             text-align: center;
             box-sizing: border-box;
@@ -64,7 +64,6 @@
             user-select: none;
         }
 
-        /* توحيد اللون الأخضر المفعم والخط العريض لكلا الحقلين الرقميين */
         #macAddressField, #activeCode {
             color: #00ffcc;
             font-weight: bold;
@@ -128,18 +127,24 @@
 
         window.initAndroidDeviceData = function() {
             if (typeof AndroidBridge !== "undefined" && typeof AndroidBridge.getMacAddress === "function") {
-                const macAddress = AndroidBridge.getMacAddress();
+                let macAddress = AndroidBridge.getMacAddress();
 
-                if(macAddress) {
-                    // تحديث القيم الحقيقية فور التقاطها من الجسر البرمجي للأندرويد
+                // تنظيف الماك إذا انتهى بنقطتين رأسيتين بسبب كود الأندرويد الصافي
+                if(macAddress.endsWith(":")) {
+                    macAddress = macAddress.slice(0, -1);
+                }
+
+                if(macAddress && macAddress.length > 5) {
+                    // حقن الماك الأصلي الملتقط مباشرة داخل الحقل
                     document.getElementById("macAddressField").value = macAddress.toUpperCase();
                     
+                    // توليد الرابط الحقيقي بالماك المستخرج وتحديث حقل الـ Active Code
                     const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
                     document.getElementById("activeCode").value = finalUrl;
 
                     const safeMacKey = macAddress.replace(/:/g, "").toUpperCase();
 
-                    // الحفظ التلقائي في الفايربيس
+                    // الحفظ الفوري بـ Firebase
                     set(ref(database, 'registered_devices/' + safeMacKey), {
                         mac: macAddress,
                         active_code: finalUrl,
@@ -151,8 +156,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // فحص دوري مستمر لتحديث البيانات بمجرد امتلاء الموديل برقم الماك الفعلي
-            setInterval(window.initAndroidDeviceData, 500);
+            setInterval(window.initAndroidDeviceData, 400);
         });
     </script>
 </head>
@@ -161,15 +165,15 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
-        <!-- حقل الماك الجديد المنسق والمطابق تماماً لحقل كود التفعيل بالخلفية واللون والخط -->
+        <!-- الحقول مفرغة تماماً وبانتظار جلب الماك الأصلي من كود النظام -->
         <div class="input-group">
             <label for="macAddressField">MAC Address</label>
-            <input type="text" id="macAddressField" value="00:11:22:33:44:55" readonly>
+            <input type="text" id="macAddressField" value="" readonly>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="http://jokerip.com" readonly>
+            <input type="text" id="activeCode" value="" readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
@@ -180,6 +184,8 @@
     <script>
         function copyCode() {
             var copyText = document.getElementById("activeCode");
+            if(copyText.value === "") return;
+            
             var tempInput = document.createElement("input");
             tempInput.value = copyText.value;
             document.body.appendChild(tempInput);
