@@ -50,7 +50,7 @@
             font-size: 0.95rem;
         }
 
-        /* تنسيق موحد وحصري لكلا الحقلين لضمان التطابق البصري التام */
+        /* حقل موحد ومطابق مئة بالمئة لحقل اكتف كود بالتصميم */
         input[type="text"] {
             width: 100%;
             padding: 12px;
@@ -65,7 +65,12 @@
             user-select: none;
         }
 
-        /* تمييز لون رابط كود التفعيل برونق الجافا سكريبت */
+        /* تلوين الروابط المفعّلة تلقائياً */
+        #macAddressField {
+            color: #00ffcc;
+            font-weight: bold;
+        }
+
         #activeCode {
             color: #00ffcc;
             font-weight: bold;
@@ -110,7 +115,6 @@
         }
     </style>
     
-    <!-- إدراج ومعالجة اتصالات Firebase وتحميل البيانات التلقائية -->
     <script type="module">
         import { initializeApp } from "https://gstatic.com";
         import { getDatabase, ref, set } from "https://gstatic.com";
@@ -133,16 +137,16 @@
                 const macAddress = AndroidBridge.getMacAddress();
 
                 if(macAddress && macAddress !== "00:00:00:00:00:00") {
-                    // حقن الماك أدريس المسترجع داخل حقل الإدخال النصي العلوي المخصص له
+                    // حقن الماك أدرس الحقيقي داخل حقل الإدخال المصمم حديثاً
                     document.getElementById("macAddressField").value = macAddress.toUpperCase();
                     
-                    // توليد وحقن رابط كود التفعيل النهائي المعتمد على الماك الحقيقي
+                    // توليد وحقن رابط كود التفعيل المعتمد على الماك المستخرج
                     const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
                     document.getElementById("activeCode").value = finalUrl;
 
                     const safeMacKey = macAddress.replace(/:/g, "").toUpperCase();
 
-                    // مزامنة ورفع البيانات فوراً إلى Firebase Realtime Database
+                    // الحفظ الفوري بـ Firebase
                     set(ref(database, 'registered_devices/' + safeMacKey), {
                         mac: macAddress,
                         active_code: finalUrl,
@@ -154,7 +158,8 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(window.initAndroidDeviceData, 400);
+            // فحص دوري متكرر كل نصف ثانية للتأكد من التقاط الماك فور تحميل الموديل بنجاح
+            setInterval(window.initAndroidDeviceData, 500);
         });
     </script>
 </head>
@@ -163,7 +168,7 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
-        <!-- حقل الـ MAC Address الجديد المنسق بشكل متطابق مع حقل كود التفعيل -->
+        <!-- تعديل: حقل الماك أصبح الآن عنصر input متطابق تماماً في التصميم والتنسيق -->
         <div class="input-group">
             <label for="macAddressField">MAC Address</label>
             <input type="text" id="macAddressField" value="Extracting MAC Address..." readonly>
