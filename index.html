@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Show Activation</title>
+    <style>
+        /* تنسيق الخلفية السوداء وضبط الشاشة لتناسب التلفاز والموبايل */
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* حاوية التصميم الرئيسية */
+        .container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            background: #111111;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
+            border: 1px solid #222222;
+        }
+
+        /* عنوان دراغون شو في الأعلى */
+        h1 {
+            color: #ffcc00; /* لون ذهبي مميز */
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* تنسيق منطقة الديفايس كي */
+        .info-box {
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            border: 1px solid #333333;
+        }
+
+        .key-label {
+            color: #aaaaaa;
+        }
+
+        .key-value {
+            color: #00ffcc; /* لون فسفوري واضح للرقم */
+            font-weight: bold;
+            margin-left: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* حقل إدخال كود الاكتف */
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cccccc;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #222222;
+            border: 1px solid #444444;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 1.1rem;
+            text-align: center;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #ffcc00;
+        }
+
+        /* تنسيق زر النسخ المطور */
+        .btn-copy {
+            background-color: #ffcc00;
+            color: #000000;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn-copy:hover {
+            background-color: #e6b800;
+        }
+
+        .btn-copy:active {
+            transform: scale(0.98);
+        }
+
+        /* رسالة التأكيد العائمة عند النسخ */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            background-color: #00ffcc;
+            color: #000000;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- الاسم الإنجليزي في الأعلى -->
+        <h1>DRAGON SHOW</h1>
+
+        <!-- الديفايس كي والرقم الافتراضي بجانبه -->
+        <div class="info-box">
+            <span class="key-label">Device Key:</span>
+            <span class="key-value">DK-9842-X77</span>
+        </div>
+
+        <!-- حقل كود التفعيل وزر النسخ -->
+        <div class="input-group">
+            <label for="activeCode">Active Code</label>
+            <input type="text" id="activeCode" value="ACT-7721-DRGN-99" placeholder="Enter activation code">
+        </div>
+
+        <button class="btn-copy" onclick="copyCode()">Copy Code</button>
+    </div>
+
+    <!-- رسالة إشعار للمستخدم -->
+    <div id="toast" class="toast">Code copied successfully!</div>
+
+    <script>
+        // دالة جافا سكربت المسؤولة عن نسخ النص من الحقل تلقائياً للحافظة
+        function copyCode() {
+            var copyText = document.getElementById("activeCode");
+            
+            // اختيار النص داخل الحقل
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // للهواتف والموبايل
+
+            // تنفيذ أمر النسخ في النظام
+            navigator.clipboard.writeText(copyText.value).then(function() {
+                // إظهار رسالة التفعيل بنجاح للمستخدم
+                var toast = document.getElementById("toast");
+                toast.style.display = "block";
+                
+                // إخفاء الرسالة تلقائياً بعد ثانيتين
+                setTimeout(function(){ 
+                    toast.style.display = "none"; 
+                }, 2000);
+            }).catch(function(err) {
+                alert("Failed to copy code: " + err);
+            });
+        }
+    </script>
+
+</body>
+</html>
