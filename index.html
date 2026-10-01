@@ -38,28 +38,6 @@
             text-transform: uppercase;
         }
 
-        /* محاذاة النص إلى اليسار ومطابقة مظهر الـ Device Key بالكامل */
-        .info-box {
-            background-color: #1a1a1a;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            margin-bottom: 25px;
-            border: 1px solid #333333;
-            text-align: left;
-        }
-
-        .key-label {
-            color: #aaaaaa;
-        }
-
-        .key-value {
-            color: #00ffcc;
-            font-weight: bold;
-            margin-left: 10px;
-            letter-spacing: 1px;
-        }
-
         .input-group {
             margin-bottom: 20px;
             text-align: left;
@@ -72,6 +50,7 @@
             font-size: 0.95rem;
         }
 
+        /* تنسيق موحد وحصري لكلا الحقلين لضمان التطابق البصري التام */
         input[type="text"] {
             width: 100%;
             padding: 12px;
@@ -84,6 +63,12 @@
             box-sizing: border-box;
             outline: none;
             user-select: none;
+        }
+
+        /* تمييز لون رابط كود التفعيل برونق الجافا سكريبت */
+        #activeCode {
+            color: #00ffcc;
+            font-weight: bold;
         }
 
         .btn-copy {
@@ -125,6 +110,7 @@
         }
     </style>
     
+    <!-- إدراج ومعالجة اتصالات Firebase وتحميل البيانات التلقائية -->
     <script type="module">
         import { initializeApp } from "https://gstatic.com";
         import { getDatabase, ref, set } from "https://gstatic.com";
@@ -147,16 +133,16 @@
                 const macAddress = AndroidBridge.getMacAddress();
 
                 if(macAddress && macAddress !== "00:00:00:00:00:00") {
-                    // حقن الماك أدريس الحقيقي باللغة الإنجليزية في الواجهة بمحاذاة اليسار
-                    document.getElementById("macAddressDisplay").innerText = macAddress.toUpperCase();
+                    // حقن الماك أدريس المسترجع داخل حقل الإدخال النصي العلوي المخصص له
+                    document.getElementById("macAddressField").value = macAddress.toUpperCase();
                     
-                    // تحديث حقل الرابط بالماك الحقيقي المستخرج من الـ SharedPreferences
+                    // توليد وحقن رابط كود التفعيل النهائي المعتمد على الماك الحقيقي
                     const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
                     document.getElementById("activeCode").value = finalUrl;
 
                     const safeMacKey = macAddress.replace(/:/g, "").toUpperCase();
 
-                    // الرفع التلقائي إلى الفايربيس
+                    // مزامنة ورفع البيانات فوراً إلى Firebase Realtime Database
                     set(ref(database, 'registered_devices/' + safeMacKey), {
                         mac: macAddress,
                         active_code: finalUrl,
@@ -168,8 +154,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // استدعاء فوري وسريع لضمان جلب البيانات دون تأخير
-            setTimeout(window.initAndroidDeviceData, 300);
+            setTimeout(window.initAndroidDeviceData, 400);
         });
     </script>
 </head>
@@ -178,10 +163,10 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
-        <!-- عرض الماك أدريس بالإنجليزية ومحاذاة لليسار -->
-        <div class="info-box">
-            <span class="key-label">MAC Address:</span>
-            <span class="key-value" id="macAddressDisplay">00:00:00:00:00:00</span>
+        <!-- حقل الـ MAC Address الجديد المنسق بشكل متطابق مع حقل كود التفعيل -->
+        <div class="input-group">
+            <label for="macAddressField">MAC Address</label>
+            <input type="text" id="macAddressField" value="Extracting MAC Address..." readonly>
         </div>
 
         <div class="input-group">
