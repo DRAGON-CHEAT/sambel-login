@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dragon Show Activation</title>
     <style>
-        /* تنسيق الخلفية السوداء وضبط الشاشة لتناسب التلفاز والموبايل */
         body {
             background-color: #000000;
             color: #ffffff;
@@ -20,7 +19,6 @@
             box-sizing: border-box;
         }
 
-        /* حاوية التصميم الرئيسية */
         .container {
             text-align: center;
             max-width: 500px;
@@ -32,16 +30,14 @@
             border: 1px solid #222222;
         }
 
-        /* عنوان دراغون شو في الأعلى */
         h1 {
-            color: #ffcc00; /* لون ذهبي مميز */
+            color: #ffcc00;
             font-size: 2.5rem;
             margin-bottom: 25px;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
 
-        /* تنسيق منطقة الديفايس كي */
         .info-box {
             background-color: #1a1a1a;
             padding: 15px;
@@ -56,13 +52,12 @@
         }
 
         .key-value {
-            color: #00ffcc; /* لون فسفوري واضح للرقم */
+            color: #00ffcc;
             font-weight: bold;
             margin-left: 10px;
             letter-spacing: 1px;
         }
 
-        /* حقل إدخال كود الاكتف */
         .input-group {
             margin-bottom: 20px;
             text-align: left;
@@ -75,6 +70,7 @@
             font-size: 0.95rem;
         }
 
+        /* تعديل هنا: منع إظهار مؤشر الكتابة عند الضغط على الحقل */
         input[type="text"] {
             width: 100%;
             padding: 12px;
@@ -86,14 +82,9 @@
             text-align: center;
             box-sizing: border-box;
             outline: none;
-            transition: border-color 0.3s;
+            user-select: none;
         }
 
-        input[type="text"]:focus {
-            border-color: #ffcc00;
-        }
-
-        /* تنسيق زر النسخ المطور */
         .btn-copy {
             background-color: #ffcc00;
             color: #000000;
@@ -111,11 +102,10 @@
             background-color: #e6b800;
         }
 
-        .btn-copy:active {
-            transform: scale(0.98);
+        .btn-copy:focus {
+            outline: 2px solid #00ffcc; /* إطار واضح عند وقوف ريموت التلفاز عليه */
         }
 
-        /* رسالة التأكيد العائمة عند النسخ */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -137,49 +127,48 @@
 <body>
 
     <div class="container">
-        <!-- الاسم الإنجليزي في الأعلى -->
         <h1>DRAGON SHOW</h1>
 
-        <!-- الديفايس كي والرقم الافتراضي بجانبه -->
         <div class="info-box">
             <span class="key-label">Device Key:</span>
             <span class="key-value">DK-9842-X77</span>
         </div>
 
-        <!-- حقل كود التفعيل وزر النسخ -->
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="ACT-7721-DRGN-99" placeholder="Enter activation code">
+            <!-- أضفنا readonly لمنع ظهور الكيبورد نهائياً عند النقر -->
+            <input type="text" id="activeCode" value="ACT-7721-DRGN-99" readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
     </div>
 
-    <!-- رسالة إشعار للمستخدم -->
     <div id="toast" class="toast">Code copied successfully!</div>
 
     <script>
-        // دالة جافا سكربت المسؤولة عن نسخ النص من الحقل تلقائياً للحافظة
+        // دالة النسخ المتوافقة مع شاشات التلفاز والموبايل بدون إظهار كيبورد
         function copyCode() {
             var copyText = document.getElementById("activeCode");
             
-            // اختيار النص داخل الحقل
-            copyText.select();
-            copyText.setSelectionRange(0, 99999); // للهواتف والموبايل
+            // إنشاء عنصر نصي مؤقت ومخفي لإتمام عملية النسخ في النظام
+            var tempInput = document.createElement("input");
+            tempInput.value = copyText.value;
+            document.body.appendChild(tempInput);
+            
+            // تحديد النص ونسخه برمجياً دون تحفيز الكيبورد
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            
+            // حذف العنصر المؤقت فوراً بعد النسخ
+            document.body.removeChild(tempInput);
 
-            // تنفيذ أمر النسخ في النظام
-            navigator.clipboard.writeText(copyText.value).then(function() {
-                // إظهار رسالة التفعيل بنجاح للمستخدم
-                var toast = document.getElementById("toast");
-                toast.style.display = "block";
-                
-                // إخفاء الرسالة تلقائياً بعد ثانيتين
-                setTimeout(function(){ 
-                    toast.style.display = "none"; 
-                }, 2000);
-            }).catch(function(err) {
-                alert("Failed to copy code: " + err);
-            });
+            // إظهار رسالة التأكيد
+            var toast = document.getElementById("toast");
+            toast.style.display = "block";
+            setTimeout(function(){ 
+                toast.style.display = "none"; 
+            }, 2000);
         }
     </script>
 
