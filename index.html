@@ -42,19 +42,23 @@
             background-color: #1a1a1a;
             padding: 15px;
             border-radius: 8px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             margin-bottom: 25px;
             border: 1px solid #333333;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .key-label {
             color: #aaaaaa;
+            font-size: 1rem;
         }
 
         .key-value {
-            color: #00ffcc;
+            color: #ffcc00;
             font-weight: bold;
-            margin-left: 10px;
+            font-size: 1.4rem;
             letter-spacing: 1px;
         }
 
@@ -76,12 +80,13 @@
             background-color: #222222;
             border: 1px solid #444444;
             border-radius: 6px;
-            color: #ffffff;
+            color: #00ffcc;
             font-size: 1.1rem;
             text-align: center;
             box-sizing: border-box;
             outline: none;
             user-select: none;
+            font-weight: bold;
         }
 
         .btn-copy {
@@ -123,7 +128,6 @@
         }
     </style>
     
-    <!-- إعدادات واتصال Firebase -->
     <script type="module">
         import { initializeApp } from "https://gstatic.com";
         import { getDatabase, ref, set } from "https://gstatic.com";
@@ -142,38 +146,34 @@
         const database = getDatabase(app);
 
         window.initAndroidDeviceData = function() {
-            if (typeof AndroidBridge !== "undefined") {
-                // جلب الماك أدرس الحقيقي فقط من داخل التطبيق
+            if (typeof AndroidBridge !== "undefined" && typeof AndroidBridge.getMacAddress === "function") {
                 const macAddress = AndroidBridge.getMacAddress();
 
-                // تحديث خانة الماك أدرس في الواجهة بدلاً من الـ Device Key القديم
+                // عرض الماك الحقيقي في الصندوق العلوي
                 document.getElementById("macAddressDisplay").innerText = macAddress.toUpperCase();
                 
-                // تحديث رابط التفعيل بالماك أدرس الحقيقي للجهاز
+                // إنشاء رابط التفعيل وحقنه داخل حقل النص الإدخالي
                 const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
                 document.getElementById("activeCode").value = finalUrl;
 
-                // تحويل الماك إلى صيغة مفتاح صالحة وموحدة للـ Firebase
                 const safeMacKey = macAddress.replace(/:/g, "").toUpperCase();
 
-                // حفظ البيانات في الفايربيس تحت معرف الماك أدرس للجهاز
+                // حفظ البيانات في الفايربيس تلقائياً
                 set(ref(database, 'registered_devices/' + safeMacKey), {
                     mac: macAddress,
                     active_code: finalUrl,
                     registeredAt: new Date().toISOString(),
                     status: "active"
                 }).then(() => {
-                    console.log("Device Mac saved successfully to Firebase!");
+                    console.log("Data loaded and saved to Firebase.");
                 }).catch((error) => {
-                    console.error("Firebase save error: ", error);
+                    console.error("Firebase Error: ", error);
                 });
-            } else {
-                console.log("الموقع يعمل على متصفح عادي وليس داخل التطبيق.");
             }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(window.initAndroidDeviceData, 500);
+            setTimeout(window.initAndroidDeviceData, 600);
         });
     </script>
 </head>
@@ -182,15 +182,15 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
-        <!-- هنا تم استبدال العنوان والقيمة إلى MAC Address بالكامل -->
+        <!-- صندوق عرض عنوان الماك المحدث فوق الحقل مباشرة -->
         <div class="info-box">
-            <span class="key-label">MAC Address:</span>
-            <span class="key-value" id="macAddressDisplay">Loading...</span>
+            <span class="key-label">عنوان ماك</span>
+            <span class="key-value" id="macAddressDisplay">00:00:00:00:00:00</span>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="Loading real device link..." readonly>
+            <input type="text" id="activeCode" value="جاري استخراج الرابط..." readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
