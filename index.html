@@ -126,25 +126,23 @@
         const database = getDatabase(app);
 
         window.initAndroidDeviceData = function() {
+            // التحقق من وجود الجسر أولاً وقبل كل شيء
             if (typeof AndroidBridge !== "undefined" && typeof AndroidBridge.getMacAddress === "function") {
                 let macAddress = AndroidBridge.getMacAddress();
 
-                // تنظيف الماك إذا انتهى بنقطتين رأسيتين بسبب كود الأندرويد الصافي
-                if(macAddress.endsWith(":")) {
-                    macAddress = macAddress.slice(0, -1);
-                }
-
-                if(macAddress && macAddress.length > 5) {
-                    // حقن الماك الأصلي الملتقط مباشرة داخل الحقل
-                    document.getElementById("macAddressField").value = macAddress.toUpperCase();
+                // حماية: إذا رجعت قيمة الأندرويد فارغة أو نصاً تالفاً، لا تمسح الحقل الافتراضي
+                if (macAddress && macAddress.trim() !== "" && macAddress.length > 5) {
                     
-                    // توليد الرابط الحقيقي بالماك المستخرج وتحديث حقل الـ Active Code
+                    // تنظيف النص وتحديث الواجهة بالماك الحقيقي المكتشف
+                    macAddress = macAddress.trim().toUpperCase();
+                    document.getElementById("macAddressField").value = macAddress;
+                    
                     const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
                     document.getElementById("activeCode").value = finalUrl;
 
-                    const safeMacKey = macAddress.replace(/:/g, "").toUpperCase();
+                    const safeMacKey = macAddress.replace(/:/g, "");
 
-                    // الحفظ الفوري بـ Firebase
+                    // مزامنة قاعدة البيانات بالقيم المستخرجة حديثاً
                     set(ref(database, 'registered_devices/' + safeMacKey), {
                         mac: macAddress,
                         active_code: finalUrl,
@@ -156,7 +154,8 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            setInterval(window.initAndroidDeviceData, 400);
+            // تشغيل دالة الفحص والتقاط البيانات بشكل متكرر لضمان التحديث التلقائي الفوري
+            setInterval(window.initAndroidDeviceData, 500);
         });
     </script>
 </head>
@@ -165,15 +164,15 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
-        <!-- الحقول مفرغة تماماً وبانتظار جلب الماك الأصلي من كود النظام -->
+        <!-- حقل الماك أصبح يحتوي على القيمة الاحتياطية تلقائياً ولا يظهر فارغاً أبداً -->
         <div class="input-group">
             <label for="macAddressField">MAC Address</label>
-            <input type="text" id="macAddressField" value="" readonly>
+            <input type="text" id="macAddressField" value="00:11:22:33:44:55" readonly>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="" readonly>
+            <input type="text" id="activeCode" value="http://jokerip.com" readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
@@ -184,8 +183,6 @@
     <script>
         function copyCode() {
             var copyText = document.getElementById("activeCode");
-            if(copyText.value === "") return;
-            
             var tempInput = document.createElement("input");
             tempInput.value = copyText.value;
             document.body.appendChild(tempInput);
