@@ -70,7 +70,6 @@
             font-size: 0.95rem;
         }
 
-        /* تعديل هنا: منع إظهار مؤشر الكتابة عند الضغط على الحقل */
         input[type="text"] {
             width: 100%;
             padding: 12px;
@@ -103,7 +102,7 @@
         }
 
         .btn-copy:focus {
-            outline: 2px solid #00ffcc; /* إطار واضح عند وقوف ريموت التلفاز عليه */
+            outline: 2px solid #00ffcc;
         }
 
         .toast {
@@ -123,21 +122,75 @@
             to { opacity: 1; }
         }
     </style>
+    
+    <!-- إعدادات واتصال Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://gstatic.com";
+        import { getDatabase, ref, set } from "https://gstatic.com";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPVNySqB8Y21s_DJnn-jZFIb77UagAr4k",
+            authDomain: "://firebaseapp.com",
+            databaseURL: "https://firebasedatabase.app",
+            projectId: "drag-9user",
+            storageBucket: "drag-9user.firebasestorage.app",
+            messagingSenderId: "716759119906",
+            appId: "1:716759119906:web:4b522ed58dba7bf623727b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        window.initAndroidDeviceData = function() {
+            if (typeof AndroidBridge !== "undefined") {
+                // جلب الماك أدرس الحقيقي فقط من داخل التطبيق
+                const macAddress = AndroidBridge.getMacAddress();
+
+                // تحديث خانة الماك أدرس في الواجهة بدلاً من الـ Device Key القديم
+                document.getElementById("macAddressDisplay").innerText = macAddress.toUpperCase();
+                
+                // تحديث رابط التفعيل بالماك أدرس الحقيقي للجهاز
+                const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
+                document.getElementById("activeCode").value = finalUrl;
+
+                // تحويل الماك إلى صيغة مفتاح صالحة وموحدة للـ Firebase
+                const safeMacKey = macAddress.replace(/:/g, "").toUpperCase();
+
+                // حفظ البيانات في الفايربيس تحت معرف الماك أدرس للجهاز
+                set(ref(database, 'registered_devices/' + safeMacKey), {
+                    mac: macAddress,
+                    active_code: finalUrl,
+                    registeredAt: new Date().toISOString(),
+                    status: "active"
+                }).then(() => {
+                    console.log("Device Mac saved successfully to Firebase!");
+                }).catch((error) => {
+                    console.error("Firebase save error: ", error);
+                });
+            } else {
+                console.log("الموقع يعمل على متصفح عادي وليس داخل التطبيق.");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(window.initAndroidDeviceData, 500);
+        });
+    </script>
 </head>
 <body>
 
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
+        <!-- هنا تم استبدال العنوان والقيمة إلى MAC Address بالكامل -->
         <div class="info-box">
-            <span class="key-label">Device Key:</span>
-            <span class="key-value">DK-9842-X77</span>
+            <span class="key-label">MAC Address:</span>
+            <span class="key-value" id="macAddressDisplay">Loading...</span>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <!-- أضفنا readonly لمنع ظهور الكيبورد نهائياً عند النقر -->
-            <input type="text" id="activeCode" value="http://jokerip.com:80/get.php?username=98:06:3c:07:4f:cc&password=TZXdthHCZp&type=m3u_plus&output=ts" readonly>
+            <input type="text" id="activeCode" value="Loading real device link..." readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
@@ -146,24 +199,16 @@
     <div id="toast" class="toast">Code copied successfully!</div>
 
     <script>
-        // دالة النسخ المتوافقة مع شاشات التلفاز والموبايل بدون إظهار كيبورد
         function copyCode() {
             var copyText = document.getElementById("activeCode");
-            
-            // إنشاء عنصر نصي مؤقت ومخفي لإتمام عملية النسخ في النظام
             var tempInput = document.createElement("input");
             tempInput.value = copyText.value;
             document.body.appendChild(tempInput);
-            
-            // تحديد النص ونسخه برمجياً دون تحفيز الكيبورد
             tempInput.select();
             tempInput.setSelectionRange(0, 99999);
             document.execCommand("copy");
-            
-            // حذف العنصر المؤقت فوراً بعد النسخ
             document.body.removeChild(tempInput);
 
-            // إظهار رسالة التأكيد
             var toast = document.getElementById("toast");
             toast.style.display = "block";
             setTimeout(function(){ 
