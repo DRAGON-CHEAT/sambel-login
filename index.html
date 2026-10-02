@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dragon Show Activation</title>
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
-    
     <style>
         body {
             background-color: #000000;
@@ -81,6 +78,14 @@
             background-color: #00ffcc !important;
             color: #000000 !important;
         }
+        /* تصميم صندوق رسائل الخطأ أسفل الزر */
+        .status-msg {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #ff3333;
+            font-weight: bold;
+            word-wrap: break-word;
+        }
         .toast {
             position: fixed;
             bottom: 20px;
@@ -100,7 +105,7 @@
 
         <div class="input-group">
             <label for="currentDeviceField">Current Device</label>
-            <input type="text" id="currentDeviceField" value="Ready to Activate Device" readonly>
+            <input type="text" id="currentDeviceField" value="Connecting to Server..." readonly>
         </div>
 
         <div class="input-group">
@@ -109,11 +114,18 @@
         </div>
 
         <button id="actionBtn" class="btn-action" onclick="handleBtnClick()">Active</button>
+        
+        <!-- صندوق استكشاف ورصد الأخطاء تحت الزر -->
+        <div id="errorLog" class="status-msg">System Status: Testing Connection...</div>
     </div>
 
     <div id="toast" class="toast">Code copied successfully!</div>
 
-    <script>
+    <script type="module">
+        // ترقية الاتصال إلى Firebase v10 الحديث لضمان كسر الحظر
+        import { initializeApp } from "https://gstatic.com";
+        import { getDatabase, ref, onValue, set } from "https://gstatic.com";
+
         const firebaseConfig = {
             databaseURL: "https://firebasedatabase.app",
             projectId: "drag-9user",
@@ -122,11 +134,17 @@
             appId: "1:716759119906:web:4b522ed58dba7bf623727b"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
         const customDevicePath = "devices/tv vip";
         let currentMode = "active";
+
+        function showLog(text, isError = true) {
+            const logBox = document.getElementById("errorLog");
+            logBox.innerText = text;
+            logBox.style.color = isError ? "#ff3333" : "#00ffcc";
+        }
 
         function generateRandomID() {
             let id = localStorage.getItem('myGeneratedId');
@@ -143,16 +161,26 @@
         }
 
         function listenToDatabase() {
-            db.ref(customDevicePath).on("value", (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.currentDevice && data.currentDevice.trim() !== "") {
-                    document.getElementById("currentDeviceField").value = data.currentDevice;
-                    if (data.active_code) {
-                        document.getElementById("activeCode").value = data.active_code;
+            try {
+                const dbRef = ref(database, customDevicePath);
+                onValue(dbRef, (snapshot) => {
+                    const data = snapshot.val();
+                    showLog("Server Connected Successfully", false);
+                    if (data && data.currentDevice && data.currentDevice.trim() !== "") {
+                        document.getElementById("currentDeviceField").value = data.currentDevice;
+                        if (data.active_code) {
+                            document.getElementById("activeCode").value = data.active_code;
+                        }
+                        setCopyMode();
+                    } else {
+                        document.getElementById("currentDeviceField").value = "Ready to Activate";
                     }
-                    setCopyMode();
-                }
-            });
+                }, (error) => {
+                    showLog("Firebase Sync Error: " + error.message);
+                });
+            } catch (e) {
+                showLog("Initialization Crash: " + e.message);
+            }
         }
 
         function setCopyMode() {
@@ -162,12 +190,15 @@
             btn.classList.add("btn-copy-mode");
         }
 
-        function handleBtnClick() {
+        window.handleBtnClick = function() {
             if (currentMode === "active") {
+                showLog("Generating ID...", false);
                 const generatedId = generateRandomID();
                 const finalUrl = `http://jokerip.com{generatedId}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
 
-                db.ref(customDevicePath).set({
+                showLog("Sending payload to Firebase...", false);
+                
+                set(ref(database, customDevicePath), {
                     currentDevice: generatedId,
                     active_code: finalUrl,
                     device_key: "tv vip"
@@ -175,8 +206,9 @@
                     document.getElementById("currentDeviceField").value = generatedId;
                     document.getElementById("activeCode").value = finalUrl;
                     setCopyMode();
+                    showLog("Success! Device registered in Database", false);
                 }).catch((error) => {
-                    alert("Firebase write error: " + error.message);
+                    showLog("Write Rejected: " + error.message + " (Check Database Rules)");
                 });
 
             } else if (currentMode === "copy") {
