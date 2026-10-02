@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dragon Show Activation</title>
+    <!-- تضمين مكتبات الفايربيس المتوافقة مع كودك -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+    
     <style>
         body {
             background-color: #000000;
@@ -18,7 +22,6 @@
             padding: 20px;
             box-sizing: border-box;
         }
-
         .container {
             text-align: center;
             max-width: 500px;
@@ -29,7 +32,6 @@
             box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
             border: 1px solid #222222;
         }
-
         h1 {
             color: #ffcc00;
             font-size: 2.5rem;
@@ -37,19 +39,16 @@
             letter-spacing: 2px;
             text-transform: uppercase;
         }
-
         .input-group {
             margin-bottom: 20px;
             text-align: left;
         }
-
         label {
             display: block;
             margin-bottom: 8px;
             color: #cccccc;
             font-size: 0.95rem;
         }
-
         input[type="text"] {
             width: 100%;
             padding: 12px;
@@ -63,12 +62,10 @@
             outline: none;
             user-select: none;
         }
-
-        #macAddressField, #activeCode {
+        #deviceIdField, #activeCode {
             color: #00ffcc;
             font-weight: bold;
         }
-
         .btn-copy {
             background-color: #ffcc00;
             color: #000000;
@@ -81,7 +78,6 @@
             width: 100%;
             transition: background-color 0.2s, transform 0.1s;
         }
-
         .toast {
             position: fixed;
             bottom: 20px;
@@ -93,60 +89,6 @@
             display: none;
         }
     </style>
-    
-    <script type="module">
-        import { initializeApp } from "https://gstatic.com";
-        import { getDatabase, ref, set } from "https://gstatic.com";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCPVNySqB8Y21s_DJnn-jZFIb77UagAr4k",
-            authDomain: "://firebaseapp.com",
-            databaseURL: "https://firebasedatabase.app",
-            projectId: "drag-9user",
-            storageBucket: "drag-9user.firebasestorage.app",
-            messagingSenderId: "716759119906",
-            appId: "1:716759119906:web:4b522ed58dba7bf623727b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        let isSaved = false;
-
-        function fetchMacFromAndroidBridge() {
-            // استدعاء الجسر المباشر المستوحى من كودك القديم الناجح 100%
-            if (typeof Android !== "undefined" && typeof Android.getMacAddress === "function") {
-                let macAddress = Android.getMacAddress();
-
-                if (macAddress && macAddress.trim() !== "") {
-                    macAddress = macAddress.trim().toUpperCase();
-                    
-                    // حقن القيم مباشرة في التصميم المتناسق
-                    document.getElementById("macAddressField").value = macAddress;
-                    
-                    const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
-                    document.getElementById("activeCode").value = finalUrl;
-
-                    if (!isSaved) {
-                        isSaved = true;
-                        const safeMacKey = macAddress.replace(/:/g, "");
-
-                        // مزامنة ورفع البيانات إلى الفايربيس
-                        set(ref(database, 'registered_devices/' + safeMacKey), {
-                            mac: macAddress,
-                            active_code: finalUrl,
-                            registeredAt: new Date().toISOString(),
-                            status: "bridge_success_active"
-                        });
-                    }
-                }
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            // فحص دوري مستمر لضمان سحب الماك فور فتح الصفحة مباشرة
-            setInterval(fetchMacFromAndroidBridge, 400);
-        });
-    </script>
 </head>
 <body>
 
@@ -154,13 +96,13 @@
         <h1>DRAGON SHOW</h1>
 
         <div class="input-group">
-            <label for="macAddressField">MAC Address</label>
-            <input type="text" id="macAddressField" value="Loading MAC Address..." readonly>
+            <label for="deviceIdField">Device Key (ID)</label>
+            <input type="text" id="deviceIdField" value="" readonly>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="Generating Link..." readonly>
+            <input type="text" id="activeCode" value="" readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
@@ -169,10 +111,66 @@
     <div id="toast" class="toast">Code copied successfully!</div>
 
     <script>
+        // إعدادات الفايربيس الخاصة بك
+        const firebaseConfig = {
+            databaseURL: "https://firebasedatabase.app",
+            projectId: "drag-9user",
+            storageBucket: "drag-9user.firebasestorage.app",
+            messagingSenderId: "716759119906",
+            appId: "1:716759119906:web:4b522ed58dba7bf623727b"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // دالة توليد المعرف الجديد (أحرف وأرقام صغيرة عشوائية) متناسق مع طلبك تماماً
+        function generateRandomID() {
+            let id = localStorage.getItem('deviceId');
+            if (!id) {
+                // توليد سلسلة عشوائية من الأحرف والأرقام بطول 13 رمزاً
+                const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+                let randomSegment = '';
+                for (let i = 0; i < 13; i++) {
+                    randomSegment += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                // دمجها لتصبح بالصيغة المطلوبة: id-xxxxxxxxxxxxx
+                id = "id-" + randomSegment;
+                localStorage.setItem('deviceId', id);
+            }
+            return id;
+        }
+        
+        const deviceId = generateRandomID();
+
+        function initAppLayout() {
+            // عرض الـ Device Key الجديد في خانة النص
+            document.getElementById("deviceIdField").value = deviceId;
+            
+            // توليد كود التفعيل بالمعرف الجديد
+            const finalUrl = `http://jokerip.com{deviceId}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
+            document.getElementById("activeCode").value = finalUrl;
+
+            // اسم المستخدم الثابت والدائم لكل الأجهزة بناءً على طلبك
+            const targetUser = "tv vip";
+
+            // حقن البيانات في الفايربيس تحت مسار users/tv vip مباشرة
+            db.ref("users/" + targetUser).set({
+                currentDevice: deviceId,
+                expirydate: "",
+                password: "s201319", // الباسورد الافتراضي للحساب الثابت
+                username: targetUser,
+                active_code: finalUrl
+            }).then(() => {
+                console.log("Database successfully updated under fixed user 'tv vip'");
+            }).catch((error) => {
+                console.error("Firebase database error: ", error);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', initAppLayout);
+
         function copyCode() {
             var copyText = document.getElementById("activeCode");
-            if(copyText.value.includes("Generating")) return;
-
             var tempInput = document.createElement("input");
             tempInput.value = copyText.value;
             document.body.appendChild(tempInput);
