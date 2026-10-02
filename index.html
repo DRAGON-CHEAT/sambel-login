@@ -1,234 +1,885 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dragon Show Activation</title>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dragon Show</title>
+
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+
     <style>
-        body {
-            background-color: #000000;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
+
+        * {
             box-sizing: border-box;
         }
-        .container {
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-            background: #111111;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
-            border: 1px solid #222222;
+
+        body {
+
+            margin: 0;
+
+            min-height: 100vh;
+
+            background: #000;
+
+            color: #fff;
+
+            font-family:
+                'Segoe UI',
+                Tahoma,
+                Geneva,
+                Verdana,
+                sans-serif;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 20px;
         }
+
+
+        .container {
+
+            width: 100%;
+
+            max-width: 500px;
+
+            background: #111;
+
+            border: 1px solid #252525;
+
+            border-radius: 14px;
+
+            padding: 30px;
+
+            box-shadow:
+                0 5px 25px
+                rgba(255,255,255,0.05);
+
+            text-align: center;
+        }
+
+
         h1 {
+
+            margin: 0 0 28px 0;
+
             color: #ffcc00;
-            font-size: 2.5rem;
-            margin-bottom: 25px;
+
+            font-size: 2.4rem;
+
             letter-spacing: 2px;
+
             text-transform: uppercase;
         }
+
+
         .input-group {
+
             margin-bottom: 20px;
+
             text-align: left;
         }
+
+
         label {
+
             display: block;
+
             margin-bottom: 8px;
-            color: #cccccc;
-            font-size: 0.95rem;
+
+            color: #ccc;
+
+            font-size: 15px;
+
+            font-weight: 600;
         }
-        input[type="text"] {
+
+
+        input {
+
             width: 100%;
-            padding: 12px;
-            background-color: #222222;
-            border: 1px solid #444444;
-            border-radius: 6px;
-            color: #ffffff;
-            font-size: 1.1rem;
-            text-align: center;
-            box-sizing: border-box;
+
+            height: 50px;
+
+            padding: 10px 14px;
+
+            border-radius: 7px;
+
+            border: 1px solid #444;
+
             outline: none;
+
+            background: #222;
+
+            color: #00ffcc;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            text-align: center;
+
             user-select: none;
         }
-        #currentDeviceField, #activeCode {
-            color: #00ffcc;
-            font-weight: bold;
-        }
-        .btn-action {
-            background-color: #ffcc00;
-            color: #000000;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
+
+
+        #actionBtn {
+
             width: 100%;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .btn-copy-mode {
-            background-color: #00ffcc !important;
-            color: #000000 !important;
-        }
-        /* تصميم صندوق رسائل الخطأ أسفل الزر */
-        .status-msg {
-            margin-top: 15px;
-            font-size: 1rem;
-            color: #ff3333;
+
+            height: 52px;
+
+            border: none;
+
+            border-radius: 7px;
+
+            background: #ffcc00;
+
+            color: #000;
+
+            font-size: 18px;
+
             font-weight: bold;
-            word-wrap: break-word;
+
+            cursor: pointer;
+
+            transition: 0.2s;
         }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            background-color: #00ffcc;
-            color: #000000;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            display: none;
+
+
+        #actionBtn:active {
+
+            transform: scale(0.98);
         }
+
+
+        #actionBtn.copy-mode {
+
+            background: #00ffcc;
+
+            color: #000;
+        }
+
+
+        #status {
+
+            margin-top: 18px;
+
+            min-height: 22px;
+
+            color: #aaa;
+
+            font-size: 13px;
+        }
+
+
+        .success {
+
+            color: #00ffcc !important;
+        }
+
+
+        .error {
+
+            color: #ff5555 !important;
+        }
+
     </style>
+
 </head>
+
+
 <body>
 
-    <div class="container">
-        <h1>DRAGON SHOW</h1>
 
-        <div class="input-group">
-            <label for="currentDeviceField">Current Device</label>
-            <input type="text" id="currentDeviceField" value="Connecting to Server..." readonly>
-        </div>
+<div class="container">
 
-        <div class="input-group">
-            <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="Click Active To Register" readonly>
-        </div>
 
-        <button id="actionBtn" class="btn-action" onclick="handleBtnClick()">Active</button>
-        
-        <!-- صندوق استكشاف ورصد الأخطاء تحت الزر -->
-        <div id="errorLog" class="status-msg">System Status: Testing Connection...</div>
+    <h1>DRAGON SHOW</h1>
+
+
+    <!-- Device Key -->
+
+    <div class="input-group">
+
+        <label for="deviceKeyField">
+            Device Key
+        </label>
+
+        <input
+            type="text"
+            id="deviceKeyField"
+            value="Waiting for Device"
+            readonly
+        >
+
     </div>
 
-    <div id="toast" class="toast">Code copied successfully!</div>
 
-    <script type="module">
-        // ترقية الاتصال إلى Firebase v10 الحديث لضمان كسر الحظر
-        import { initializeApp } from "https://gstatic.com";
-        import { getDatabase, ref, onValue, set } from "https://gstatic.com";
+    <!-- Active Code -->
 
-        const firebaseConfig = {
-            databaseURL: "https://firebasedatabase.app",
-            projectId: "drag-9user",
-            storageBucket: "drag-9user.firebasestorage.app",
-            messagingSenderId: "716759119906",
-            appId: "1:716759119906:web:4b522ed58dba7bf623727b"
-        };
+    <div class="input-group">
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+        <label for="activeCodeField">
+            Active Code
+        </label>
 
-        const customDevicePath = "devices/tv vip";
-        let currentMode = "active";
+        <input
+            type="text"
+            id="activeCodeField"
+            value="Waiting for Firebase"
+            readonly
+        >
 
-        function showLog(text, isError = true) {
-            const logBox = document.getElementById("errorLog");
-            logBox.innerText = text;
-            logBox.style.color = isError ? "#ff3333" : "#00ffcc";
-        }
+    </div>
 
-        function generateRandomID() {
-            let id = localStorage.getItem('myGeneratedId');
-            if (!id) {
-                const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-                let randomSegment = '';
-                for (let i = 0; i < 13; i++) {
-                    randomSegment += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
-                id = "id-" + randomSegment;
-                localStorage.setItem('myGeneratedId', id);
+
+    <!-- Active -->
+
+    <button
+        id="actionBtn"
+        onclick="handleActive()"
+    >
+        Active
+    </button>
+
+
+    <div id="status">
+        Connecting to Firebase...
+    </div>
+
+
+</div>
+
+
+
+<script>
+
+
+/*
+|--------------------------------------------------------------------------
+| Firebase
+|--------------------------------------------------------------------------
+*/
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyCPVNySqB8Y21s_DJnn-jZFIb77UagAr4k",
+
+    authDomain:
+        "drag-9user.firebaseapp.com",
+
+    databaseURL:
+        "https://drag-9user-default-rtdb.europe-west1.firebasedatabase.app",
+
+    projectId:
+        "drag-9user",
+
+    storageBucket:
+        "drag-9user.firebasestorage.app",
+
+    messagingSenderId:
+        "716759119906",
+
+    appId:
+        "1:716759119906:web:4b522ed58dba7bf623727b"
+};
+
+
+firebase.initializeApp(
+    firebaseConfig
+);
+
+
+const db =
+    firebase.database();
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Path
+|--------------------------------------------------------------------------
+*/
+
+const mainDevicePath =
+    "devices/main";
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Elements
+|--------------------------------------------------------------------------
+*/
+
+const deviceKeyField =
+    document.getElementById(
+        "deviceKeyField"
+    );
+
+
+const activeCodeField =
+    document.getElementById(
+        "activeCodeField"
+    );
+
+
+const actionBtn =
+    document.getElementById(
+        "actionBtn"
+    );
+
+
+const status =
+    document.getElementById(
+        "status"
+    );
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Generate Random Device ID
+|--------------------------------------------------------------------------
+|
+| أرقام فقط.
+|
+| مثال:
+|
+| 58317426
+|
+| بدون -
+|
+| لا يحتوي على نفس الرقم الموجود حاليًا.
+|
+*/
+
+function generateRandomID(existingId) {
+
+    let id;
+
+
+    do {
+
+        /*
+         * 8 أرقام عشوائية
+         *
+         * أول رقم لا يكون 0
+         */
+
+        id =
+            String(
+                Math.floor(
+                    10000000 +
+                    Math.random() *
+                    90000000
+                )
+            );
+
+    }
+
+    while (
+        existingId &&
+        id === String(existingId)
+    );
+
+
+    return id;
+}
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Read Firebase
+|--------------------------------------------------------------------------
+*/
+
+function listenToMainDevice() {
+
+    db.ref(mainDevicePath).on(
+        "value",
+
+        function(snapshot) {
+
+            const data =
+                snapshot.val();
+
+
+            /*
+             * لا توجد بيانات
+             */
+
+            if (!data) {
+
+                deviceKeyField.value =
+                    "Waiting for Device";
+
+
+                activeCodeField.value =
+                    "Waiting for Firebase";
+
+
+                actionBtn.innerText =
+                    "Active";
+
+
+                actionBtn.classList.remove(
+                    "copy-mode"
+                );
+
+
+                status.innerText =
+                    "Ready to activate";
+
+
+                status.className =
+                    "";
+
+
+                return;
             }
-            return id;
-        }
 
-        function listenToDatabase() {
-            try {
-                const dbRef = ref(database, customDevicePath);
-                onValue(dbRef, (snapshot) => {
-                    const data = snapshot.val();
-                    showLog("Server Connected Successfully", false);
-                    if (data && data.currentDevice && data.currentDevice.trim() !== "") {
-                        document.getElementById("currentDeviceField").value = data.currentDevice;
-                        if (data.active_code) {
-                            document.getElementById("activeCode").value = data.active_code;
-                        }
-                        setCopyMode();
-                    } else {
-                        document.getElementById("currentDeviceField").value = "Ready to Activate";
-                    }
-                }, (error) => {
-                    showLog("Firebase Sync Error: " + error.message);
-                });
-            } catch (e) {
-                showLog("Initialization Crash: " + e.message);
+
+
+            /*
+             *--------------------------------------------------
+             * Device Key
+             *--------------------------------------------------
+             *
+             * يقرأ نفس:
+             *
+             * devices/main/currentDevice
+             */
+
+            if (
+                data.currentDevice !== undefined &&
+                data.currentDevice !== null &&
+                String(
+                    data.currentDevice
+                ).trim() !== ""
+            ) {
+
+                deviceKeyField.value =
+                    String(
+                        data.currentDevice
+                    );
+
+
+                /*
+                 * صار موجود
+                 */
+
+                actionBtn.innerText =
+                    "Copy Code";
+
+
+                actionBtn.classList.add(
+                    "copy-mode"
+                );
+
+
+                status.innerText =
+                    "Device connected";
+
+
+                status.className =
+                    "success";
+
+            } else {
+
+                deviceKeyField.value =
+                    "Waiting for Device";
+
+
+                actionBtn.innerText =
+                    "Active";
+
+
+                actionBtn.classList.remove(
+                    "copy-mode"
+                );
+
             }
-        }
 
-        function setCopyMode() {
-            currentMode = "copy";
-            const btn = document.getElementById("actionBtn");
-            btn.innerText = "Copy Code";
-            btn.classList.add("btn-copy-mode");
-        }
 
-        window.handleBtnClick = function() {
-            if (currentMode === "active") {
-                showLog("Generating ID...", false);
-                const generatedId = generateRandomID();
-                const finalUrl = `http://jokerip.com{generatedId}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
 
-                showLog("Sending payload to Firebase...", false);
-                
-                set(ref(database, customDevicePath), {
-                    currentDevice: generatedId,
-                    active_code: finalUrl,
-                    device_key: "tv vip"
-                }).then(() => {
-                    document.getElementById("currentDeviceField").value = generatedId;
-                    document.getElementById("activeCode").value = finalUrl;
-                    setCopyMode();
-                    showLog("Success! Device registered in Database", false);
-                }).catch((error) => {
-                    showLog("Write Rejected: " + error.message + " (Check Database Rules)");
-                });
+            /*
+             *--------------------------------------------------
+             * Active Code
+             *--------------------------------------------------
+             *
+             * فقط قراءة من Firebase
+             */
 
-            } else if (currentMode === "copy") {
-                var copyText = document.getElementById("activeCode");
-                var tempInput = document.createElement("input");
-                tempInput.value = copyText.value;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                tempInput.setSelectionRange(0, 99999);
-                document.execCommand("copy");
-                document.body.removeChild(tempInput);
+            if (
+                data.active_code !== undefined &&
+                data.active_code !== null &&
+                String(
+                    data.active_code
+                ).trim() !== ""
+            ) {
 
-                var toast = document.getElementById("toast");
-                toast.style.display = "block";
-                setTimeout(function(){ toast.style.display = "none"; }, 2000);
+                activeCodeField.value =
+                    String(
+                        data.active_code
+                    );
+
+            } else {
+
+                activeCodeField.value =
+                    "Waiting for Firebase";
             }
-        }
 
-        window.addEventListener('DOMContentLoaded', listenToDatabase);
-    </script>
+        },
+
+        function(error) {
+
+            console.error(
+                "Firebase read error:",
+                error
+            );
+
+
+            status.innerText =
+                "Firebase error: " +
+                error.message;
+
+
+            status.className =
+                "error";
+        }
+    );
+}
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Active Button
+|--------------------------------------------------------------------------
+*/
+
+function handleActive() {
+
+
+    /*
+     * إذا كان الجهاز موجود
+     * يصبح الزر Copy Code
+     */
+
+    if (
+        actionBtn.classList.contains(
+            "copy-mode"
+        )
+    ) {
+
+        copyActiveCode();
+
+        return;
+    }
+
+
+
+    /*
+     * اقرأ البيانات الحالية أولاً
+     */
+
+    db.ref(mainDevicePath)
+        .once("value")
+
+        .then(function(snapshot) {
+
+
+            const data =
+                snapshot.val() || {};
+
+
+            const existingId =
+                data.currentDevice || "";
+
+
+
+            /*
+             * إنشاء ID عشوائي جديد
+             *
+             * بدون -
+             */
+
+            const newDeviceId =
+                generateRandomID(
+                    existingId
+                );
+
+
+
+            /*
+             *--------------------------------------------------
+             * إذا devices/main غير موجود
+             *--------------------------------------------------
+             *
+             * ننشئ:
+             *
+             * currentDevice
+             * active_code
+             */
+
+            if (!snapshot.exists()) {
+
+                return db
+                    .ref(mainDevicePath)
+                    .set({
+
+                        currentDevice:
+                            newDeviceId,
+
+                        active_code:
+                            ""
+
+                    });
+            }
+
+
+
+            /*
+             *--------------------------------------------------
+             * إذا المسار موجود لكن currentDevice فارغ
+             *--------------------------------------------------
+             */
+
+            if (
+                !existingId ||
+                String(existingId).trim() === ""
+            ) {
+
+                return db
+                    .ref(mainDevicePath)
+                    .update({
+
+                        currentDevice:
+                            newDeviceId,
+
+                        /*
+                         * إذا active_code
+                         * غير موجود، ننشئه فارغًا.
+                         *
+                         * إذا موجود، لا نمسحه.
+                         */
+
+                        ...(data.active_code === undefined
+                            ? {
+                                active_code: ""
+                            }
+                            : {})
+
+                    });
+            }
+
+
+
+            /*
+             * موجود مسبقاً
+             */
+
+            return null;
+
+        })
+
+        .then(function() {
+
+            status.innerText =
+                "Device registered successfully";
+
+
+            status.className =
+                "success";
+
+        })
+
+        .catch(function(error) {
+
+            console.error(
+                "Firebase write error:",
+                error
+            );
+
+
+            status.innerText =
+                "Firebase error: " +
+                error.message;
+
+
+            status.className =
+                "error";
+        });
+}
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Copy Active Code
+|--------------------------------------------------------------------------
+*/
+
+function copyActiveCode() {
+
+    const code =
+        activeCodeField.value;
+
+
+    if (
+        !code ||
+        code === "Waiting for Firebase"
+    ) {
+
+        status.innerText =
+            "Active Code is empty";
+
+
+        status.className =
+            "error";
+
+
+        return;
+    }
+
+
+
+    if (
+        navigator.clipboard &&
+        navigator.clipboard.writeText
+    ) {
+
+        navigator.clipboard
+            .writeText(code)
+
+            .then(function() {
+
+                status.innerText =
+                    "Active Code copied";
+
+
+                status.className =
+                    "success";
+
+            })
+
+            .catch(function() {
+
+                fallbackCopy(code);
+
+            });
+
+    } else {
+
+        fallbackCopy(code);
+
+    }
+}
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Fallback Copy
+|--------------------------------------------------------------------------
+*/
+
+function fallbackCopy(text) {
+
+    const input =
+        document.createElement(
+            "textarea"
+        );
+
+
+    input.value =
+        text;
+
+
+    input.style.position =
+        "fixed";
+
+
+    input.style.left =
+        "-9999px";
+
+
+    document.body.appendChild(
+        input
+    );
+
+
+    input.focus();
+
+    input.select();
+
+
+    try {
+
+        document.execCommand(
+            "copy"
+        );
+
+
+        status.innerText =
+            "Active Code copied";
+
+
+        status.className =
+            "success";
+
+    } catch (error) {
+
+        status.innerText =
+            "Copy failed";
+
+
+        status.className =
+            "error";
+    }
+
+
+    document.body.removeChild(
+        input
+    );
+}
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Start
+|--------------------------------------------------------------------------
+*/
+
+window.addEventListener(
+    "DOMContentLoaded",
+
+    function() {
+
+        listenToMainDevice();
+
+    }
+);
+
+
+</script>
+
 
 </body>
 </html>
