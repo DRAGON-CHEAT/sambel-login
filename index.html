@@ -56,7 +56,6 @@
             background-color: #222222;
             border: 1px solid #444444;
             border-radius: 6px;
-            color: #ffffff;
             font-size: 1.1rem;
             text-align: center;
             box-sizing: border-box;
@@ -82,6 +81,14 @@
             transition: background-color 0.2s, transform 0.1s;
         }
 
+        .btn-copy:hover {
+            background-color: #e6b800;
+        }
+
+        .btn-copy:focus {
+            outline: 2px solid #00ffcc;
+        }
+
         .toast {
             position: fixed;
             bottom: 20px;
@@ -91,6 +98,12 @@
             border-radius: 20px;
             font-weight: bold;
             display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
     
@@ -111,34 +124,36 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // دالة قراءة المتغيرات من الرابط (URL Parameters) تلقائياً
-        function getMacFromUrl() {
+        function readUrlParameters() {
+            // قراءة البارامتر الممرر مباشرة من الرابط المفتوح بالأندرويد
             const urlParams = new URLSearchParams(window.location.search);
             let macAddress = urlParams.get('mac');
 
-            if (macAddress) {
+            if (macAddress && macAddress.trim() !== "") {
                 macAddress = macAddress.trim().toUpperCase();
                 
-                // عرض الماك الحقيقي داخل الحقل فوراً وبدون أي لودينج
+                // ملء حقل الماك أدريس فوراً وبدون أي لودينج أو انتظار
                 document.getElementById("macAddressField").value = macAddress;
                 
-                // توليد رابط كود التفعيل
+                // توليد رابط كود التفعيل المباشر وحقنه داخل الحقل المخصص له
                 const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
                 document.getElementById("activeCode").value = finalUrl;
 
                 const safeMacKey = macAddress.replace(/:/g, "");
 
-                // رفع البيانات ومزامنتها بـ Firebase
+                // مزامنة البيانات السحابية في قاعدة بيانات Firebase بالماك المستخرج
                 set(ref(database, 'registered_devices/' + safeMacKey), {
                     mac: macAddress,
                     active_code: finalUrl,
                     registeredAt: new Date().toISOString(),
-                    status: "receiver_active"
+                    status: "direct_url_active"
+                }).then(() => {
+                    console.log("Data synchronized with Firebase.");
                 });
             }
         }
 
-        window.addEventListener('DOMContentLoaded', getMacFromUrl);
+        window.addEventListener('DOMContentLoaded', readUrlParameters);
     </script>
 </head>
 <body>
@@ -148,12 +163,12 @@
 
         <div class="input-group">
             <label for="macAddressField">MAC Address</label>
-            <input type="text" id="macAddressField" value="No MAC Detected" readonly>
+            <input type="text" id="macAddressField" value="No MAC Address Detected" readonly>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="No Active Code" readonly>
+            <input type="text" id="activeCode" value="No Active Code Generated" readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
@@ -176,7 +191,9 @@
 
             var toast = document.getElementById("toast");
             toast.style.display = "block";
-            setTimeout(function(){ toast.style.display = "none"; }, 2000);
+            setTimeout(function(){ 
+                toast.style.display = "none"; 
+            }, 2000);
         }
     </script>
 
