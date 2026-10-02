@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dragon Show Activation</title>
-    <!-- استدعاء مكتبات الفايربيس القياسية -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
     
@@ -99,10 +98,9 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
-        <!-- حقل قراءة وعرض الـ currentDevice المخزن في فايربيس فقط -->
         <div class="input-group">
             <label for="currentDeviceField">Current Device</label>
-            <input type="text" id="currentDeviceField" value="Loading Device From Server..." readonly>
+            <input type="text" id="currentDeviceField" value="Checking configuration..." readonly>
         </div>
 
         <div class="input-group">
@@ -127,11 +125,10 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // العقدة المرجعية التي تقوم أنت بإنشائها مسبقاً في الداتابيس يدوياً
-        const parentDeviceKey = "tv vip";
+        // إنشاء مسار مستقل تماماً على الجذر الرئيسي باسم "devices" بجانب "users"
+        const customDevicePath = "devices/tv vip";
         let currentMode = "active";
 
-        // دالة توليد المعرف الفريد العشوائي (أحرف وأرقام صغيرة)
         function generateRandomID() {
             let id = localStorage.getItem('myGeneratedId');
             if (!id) {
@@ -146,28 +143,21 @@
             return id;
         }
 
-        // دالة جلب وعرض الـ currentDevice الموجود مسبقاً في السيرفر دون تعديل عليه
+        // الاستماع للمسار المنفصل؛ إذا لم يكن موجوداً سيعرض رسالة الانتظار دون تجميد
         function listenToDatabase() {
-            db.ref("devices/" + parentDeviceKey).on("value", (snapshot) => {
+            db.ref(customDevicePath).on("value", (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    // التحقق إذا كان هناك جهاز مسجل مسبقاً في هذا النود
-                    if (data.currentDevice && data.currentDevice.trim() !== "") {
-                        // قراءة وعرض الـ currentDevice المسجل في السيرفر فقط داخل الحقل الأول
-                        document.getElementById("currentDeviceField").value = data.currentDevice;
-                        
-                        if (data.active_code) {
-                            document.getElementById("activeCode").value = data.active_code;
-                        }
-                        // تحويل الزر تلقائياً إلى وضع النسخ Copy
-                        setCopyMode();
-                    } else {
-                        // إذا كان النود موجوداً ولكن خانة الكرنت ديفايس فارغة
-                        document.getElementById("currentDeviceField").value = "Device Not Activated Yet";
+                if (data && data.currentDevice && data.currentDevice.trim() !== "") {
+                    document.getElementById("currentDeviceField").value = data.currentDevice;
+                    if (data.active_code) {
+                        document.getElementById("activeCode").value = data.active_code;
                     }
+                    setCopyMode();
                 } else {
-                    document.getElementById("currentDeviceField").value = "Key Space Not Found On Server";
+                    document.getElementById("currentDeviceField").value = "Ready to Activate Device";
                 }
+            }, (error) => {
+                document.getElementById("currentDeviceField").value = "Permission denied or route issue";
             });
         }
 
@@ -180,23 +170,23 @@
 
         function handleBtnClick() {
             if (currentMode === "active") {
-                // توليد المعرف العشوائي الجديد عند الضغط على زر التفعيل
                 const generatedId = generateRandomID();
                 const finalUrl = `http://jokerip.com{generatedId}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
 
-                // حفظ الـ currentDevice المتولد ورابط التفعيل تحت مسار الـ device_key المكتوب مسبقاً
-                db.ref("devices/" + parentDeviceKey).update({
+                // استخدام دالة set المباشرة لإجبار الفايربيس على بناء مجلد "devices" جديد كلياً على السطح
+                db.ref(customDevicePath).set({
                     currentDevice: generatedId,
-                    active_code: finalUrl
+                    active_code: finalUrl,
+                    device_key: "tv vip"
                 }).then(() => {
-                    // تحديث فوري لواجهة العرض بعد تمام عملية الحفظ بنجاح
                     document.getElementById("currentDeviceField").value = generatedId;
                     document.getElementById("activeCode").value = finalUrl;
                     setCopyMode();
+                }).catch((error) => {
+                    alert("Firebase write error: " + error.message + "\n💡 تأكد من تحديث قواعد الحماية (Rules) في فايربيس لتسمح بالقراءة والكتابة في مسار devices.");
                 });
 
             } else if (currentMode === "copy") {
-                // تنفيذ عملية النسخ القياسية للرابط
                 var copyText = document.getElementById("activeCode");
                 var tempInput = document.createElement("input");
                 tempInput.value = copyText.value;
