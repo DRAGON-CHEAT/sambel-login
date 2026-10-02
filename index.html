@@ -111,28 +111,34 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // إنشاء دالة استقبال عالمية ومكشوفة ليقوم الأندرويد بحقن الماك داخلها مباشرة
-        window.updateFromAndroid = function(macAddress) {
-            if (macAddress && macAddress.trim() !== "") {
+        // دالة قراءة المتغيرات من الرابط (URL Parameters) تلقائياً
+        function getMacFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let macAddress = urlParams.get('mac');
+
+            if (macAddress) {
                 macAddress = macAddress.trim().toUpperCase();
                 
-                // تحديث الحقول فوراً بقيمة الماك المحقونة إجبارياً
+                // عرض الماك الحقيقي داخل الحقل فوراً وبدون أي لودينج
                 document.getElementById("macAddressField").value = macAddress;
                 
+                // توليد رابط كود التفعيل
                 const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
                 document.getElementById("activeCode").value = finalUrl;
 
                 const safeMacKey = macAddress.replace(/:/g, "");
 
-                // رفع البيانات إلى الفايربيس
+                // رفع البيانات ومزامنتها بـ Firebase
                 set(ref(database, 'registered_devices/' + safeMacKey), {
                     mac: macAddress,
                     active_code: finalUrl,
                     registeredAt: new Date().toISOString(),
-                    status: "forced_active"
+                    status: "receiver_active"
                 });
             }
         }
+
+        window.addEventListener('DOMContentLoaded', getMacFromUrl);
     </script>
 </head>
 <body>
@@ -142,12 +148,12 @@
 
         <div class="input-group">
             <label for="macAddressField">MAC Address</label>
-            <input type="text" id="macAddressField" value="Waiting for Injection..." readonly>
+            <input type="text" id="macAddressField" value="No MAC Detected" readonly>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="Generating..." readonly>
+            <input type="text" id="activeCode" value="No Active Code" readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
@@ -158,7 +164,7 @@
     <script>
         function copyCode() {
             var copyText = document.getElementById("activeCode");
-            if(copyText.value.includes("Generating")) return;
+            if(copyText.value.includes("No Active")) return;
 
             var tempInput = document.createElement("input");
             tempInput.value = copyText.value;
