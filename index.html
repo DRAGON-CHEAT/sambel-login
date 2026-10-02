@@ -50,13 +50,13 @@
             font-size: 0.95rem;
         }
 
-        /* تنسيق موحد ومطابق تماماً للحقول */
         input[type="text"] {
             width: 100%;
             padding: 12px;
             background-color: #222222;
             border: 1px solid #444444;
             border-radius: 6px;
+            color: #ffffff;
             font-size: 1.1rem;
             text-align: center;
             box-sizing: border-box;
@@ -124,21 +124,19 @@
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
-
-        // متغير لمنع تكرار الإرسال المتتالي للفايربيس عند استقرار القيمة
         let isSavedToFirebase = false;
 
         window.initAndroidDeviceData = function() {
+            // فحص وجود الجسر البرمجي
             if (typeof AndroidBridge !== "undefined" && typeof AndroidBridge.getMacAddress === "function") {
                 let macAddress = AndroidBridge.getMacAddress();
 
                 if (macAddress && macAddress.trim() !== "") {
                     macAddress = macAddress.trim().toUpperCase();
                     
-                    // حقن الماك الحقيقي المستخرج داخل الحقل الرأسي
+                    // تحديث واجهة المستخدم بالماك الحقيقي واختفاء وضع اللودينج
                     document.getElementById("macAddressField").value = macAddress;
                     
-                    // تحديث الرابط الحقيقي الفعال الموجه للتفعيل بالماك المستخرج
                     const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
                     document.getElementById("activeCode").value = finalUrl;
 
@@ -146,14 +144,12 @@
                         isSavedToFirebase = true;
                         const safeMacKey = macAddress.replace(/:/g, "");
 
-                        // إتمام التسجيل السحابي بنجاح في قاعدة بيانات Firebase
+                        // الحفظ في الفايربيس
                         set(ref(database, 'registered_devices/' + safeMacKey), {
                             mac: macAddress,
                             active_code: finalUrl,
                             registeredAt: new Date().toISOString(),
                             status: "active"
-                        }).then(() => {
-                            console.log("Successfully synchronised with Firebase.");
                         });
                     }
                 }
@@ -161,8 +157,8 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // فحص مستمر كل 500 مللي ثانية لالتقاط الماك فور حقن الجسر في الذاكرة
-            setInterval(window.initAndroidDeviceData, 500);
+            // تكرار المحاولة كل 400 مللي ثانية حتى يكتمل تحميل الصفحة والحقن بنجاح
+            setInterval(window.initAndroidDeviceData, 400);
         });
     </script>
 </head>
@@ -171,7 +167,6 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
-        <!-- كلا الحقلين بنفس التنسيق تماماً وبانتظار الحقن التلقائي من كود الـ Smali الحقيقي -->
         <div class="input-group">
             <label for="macAddressField">MAC Address</label>
             <input type="text" id="macAddressField" value="Loading MAC Address..." readonly>
