@@ -82,14 +82,6 @@
             transition: background-color 0.2s, transform 0.1s;
         }
 
-        .btn-copy:hover {
-            background-color: #e6b800;
-        }
-
-        .btn-copy:focus {
-            outline: 2px solid #00ffcc;
-        }
-
         .toast {
             position: fixed;
             bottom: 20px;
@@ -99,12 +91,6 @@
             border-radius: 20px;
             font-weight: bold;
             display: none;
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
     </style>
     
@@ -124,41 +110,42 @@
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+        let isSaved = false;
 
-        function processDeviceActivation() {
-            const urlParams = new URLSearchParams(window.location.search);
-            let macAddress = urlParams.get('mac');
+        function fetchMacFromAndroidBridge() {
+            // استدعاء الجسر المباشر المستوحى من كودك القديم الناجح 100%
+            if (typeof Android !== "undefined" && typeof Android.getMacAddress === "function") {
+                let macAddress = Android.getMacAddress();
 
-            // حماية التصفير: إذا فتح التطبيق قبل امتلاء الموديل، استخدم ماك افتراضي حقيقي صالح
-            if (!macAddress || macAddress.trim() === "") {
-                macAddress = "00:11:22:33:44:55";
+                if (macAddress && macAddress.trim() !== "") {
+                    macAddress = macAddress.trim().toUpperCase();
+                    
+                    // حقن القيم مباشرة في التصميم المتناسق
+                    document.getElementById("macAddressField").value = macAddress;
+                    
+                    const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
+                    document.getElementById("activeCode").value = finalUrl;
+
+                    if (!isSaved) {
+                        isSaved = true;
+                        const safeMacKey = macAddress.replace(/:/g, "");
+
+                        // مزامنة ورفع البيانات إلى الفايربيس
+                        set(ref(database, 'registered_devices/' + safeMacKey), {
+                            mac: macAddress,
+                            active_code: finalUrl,
+                            registeredAt: new Date().toISOString(),
+                            status: "bridge_success_active"
+                        });
+                    }
+                }
             }
-
-            macAddress = macAddress.trim().toUpperCase();
-            
-            // حقن الماك النهائي المعتمد داخل حقل الإدخال المصمم
-            document.getElementById("macAddressField").value = macAddress;
-            
-            // توليد وحقن رابط التفعيل المباشر
-            const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
-            document.getElementById("activeCode").value = finalUrl;
-
-            const safeMacKey = macAddress.replace(/:/g, "");
-
-            // المزامنة والرفع الفوري لقاعدة بيانات Firebase
-            set(ref(database, 'registered_devices/' + safeMacKey), {
-                mac: macAddress,
-                active_code: finalUrl,
-                registeredAt: new Date().toISOString(),
-                status: "stable_url_active"
-            }).then(() => {
-                console.log("Firebase transaction completed successfully.");
-            }).catch((error) => {
-                console.error("Firebase fail: ", error);
-            });
         }
 
-        window.addEventListener('DOMContentLoaded', processDeviceActivation);
+        window.addEventListener('DOMContentLoaded', () => {
+            // فحص دوري مستمر لضمان سحب الماك فور فتح الصفحة مباشرة
+            setInterval(fetchMacFromAndroidBridge, 400);
+        });
     </script>
 </head>
 <body>
@@ -168,12 +155,12 @@
 
         <div class="input-group">
             <label for="macAddressField">MAC Address</label>
-            <input type="text" id="macAddressField" value="00:00:00:00:00:00" readonly>
+            <input type="text" id="macAddressField" value="Loading MAC Address..." readonly>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="Generating Active Code..." readonly>
+            <input type="text" id="activeCode" value="Generating Link..." readonly>
         </div>
 
         <button class="btn-copy" onclick="copyCode()">Copy Code</button>
@@ -184,6 +171,8 @@
     <script>
         function copyCode() {
             var copyText = document.getElementById("activeCode");
+            if(copyText.value.includes("Generating")) return;
+
             var tempInput = document.createElement("input");
             tempInput.value = copyText.value;
             document.body.appendChild(tempInput);
@@ -194,9 +183,7 @@
 
             var toast = document.getElementById("toast");
             toast.style.display = "block";
-            setTimeout(function(){ 
-                toast.style.display = "none"; 
-            }, 2000);
+            setTimeout(function(){ toast.style.display = "none"; }, 2000);
         }
     </script>
 
