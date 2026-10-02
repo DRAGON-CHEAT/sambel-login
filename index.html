@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dragon Show Activation</title>
-    <!-- تضمين مكتبات الفايربيس المتوافقة مع كودك -->
+    <!-- استدعاء مكتبات الفايربيس القياسية -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
     
@@ -62,11 +62,11 @@
             outline: none;
             user-select: none;
         }
-        #deviceIdField, #activeCode {
+        #currentDeviceField, #activeCode {
             color: #00ffcc;
             font-weight: bold;
         }
-        .btn-copy {
+        .btn-action {
             background-color: #ffcc00;
             color: #000000;
             border: none;
@@ -77,6 +77,10 @@
             cursor: pointer;
             width: 100%;
             transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-copy-mode {
+            background-color: #00ffcc !important;
+            color: #000000 !important;
         }
         .toast {
             position: fixed;
@@ -95,23 +99,23 @@
     <div class="container">
         <h1>DRAGON SHOW</h1>
 
+        <!-- حقل قراءة وعرض الـ currentDevice المخزن في فايربيس فقط -->
         <div class="input-group">
-            <label for="deviceIdField">Device Key (ID)</label>
-            <input type="text" id="deviceIdField" value="" readonly>
+            <label for="currentDeviceField">Current Device</label>
+            <input type="text" id="currentDeviceField" value="Loading Device From Server..." readonly>
         </div>
 
         <div class="input-group">
             <label for="activeCode">Active Code</label>
-            <input type="text" id="activeCode" value="" readonly>
+            <input type="text" id="activeCode" value="Click Active To Register" readonly>
         </div>
 
-        <button class="btn-copy" onclick="copyCode()">Copy Code</button>
+        <button id="actionBtn" class="btn-action" onclick="handleBtnClick()">Active</button>
     </div>
 
     <div id="toast" class="toast">Code copied successfully!</div>
 
     <script>
-        // إعدادات الفايربيس الخاصة بك
         const firebaseConfig = {
             databaseURL: "https://firebasedatabase.app",
             projectId: "drag-9user",
@@ -123,66 +127,92 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // دالة توليد المعرف الجديد (أحرف وأرقام صغيرة عشوائية) متناسق مع طلبك تماماً
+        // العقدة المرجعية التي تقوم أنت بإنشائها مسبقاً في الداتابيس يدوياً
+        const parentDeviceKey = "tv vip";
+        let currentMode = "active";
+
+        // دالة توليد المعرف الفريد العشوائي (أحرف وأرقام صغيرة)
         function generateRandomID() {
-            let id = localStorage.getItem('deviceId');
+            let id = localStorage.getItem('myGeneratedId');
             if (!id) {
-                // توليد سلسلة عشوائية من الأحرف والأرقام بطول 13 رمزاً
                 const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
                 let randomSegment = '';
                 for (let i = 0; i < 13; i++) {
                     randomSegment += chars.charAt(Math.floor(Math.random() * chars.length));
                 }
-                // دمجها لتصبح بالصيغة المطلوبة: id-xxxxxxxxxxxxx
                 id = "id-" + randomSegment;
-                localStorage.setItem('deviceId', id);
+                localStorage.setItem('myGeneratedId', id);
             }
             return id;
         }
-        
-        const deviceId = generateRandomID();
 
-        function initAppLayout() {
-            // عرض الـ Device Key الجديد في خانة النص
-            document.getElementById("deviceIdField").value = deviceId;
-            
-            // توليد كود التفعيل بالمعرف الجديد
-            const finalUrl = `http://jokerip.com{deviceId}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
-            document.getElementById("activeCode").value = finalUrl;
-
-            // اسم المستخدم الثابت والدائم لكل الأجهزة بناءً على طلبك
-            const targetUser = "tv vip";
-
-            // حقن البيانات في الفايربيس تحت مسار users/tv vip مباشرة
-            db.ref("users/" + targetUser).set({
-                currentDevice: deviceId,
-                expirydate: "",
-                password: "s201319", // الباسورد الافتراضي للحساب الثابت
-                username: targetUser,
-                active_code: finalUrl
-            }).then(() => {
-                console.log("Database successfully updated under fixed user 'tv vip'");
-            }).catch((error) => {
-                console.error("Firebase database error: ", error);
+        // دالة جلب وعرض الـ currentDevice الموجود مسبقاً في السيرفر دون تعديل عليه
+        function listenToDatabase() {
+            db.ref("devices/" + parentDeviceKey).on("value", (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    // التحقق إذا كان هناك جهاز مسجل مسبقاً في هذا النود
+                    if (data.currentDevice && data.currentDevice.trim() !== "") {
+                        // قراءة وعرض الـ currentDevice المسجل في السيرفر فقط داخل الحقل الأول
+                        document.getElementById("currentDeviceField").value = data.currentDevice;
+                        
+                        if (data.active_code) {
+                            document.getElementById("activeCode").value = data.active_code;
+                        }
+                        // تحويل الزر تلقائياً إلى وضع النسخ Copy
+                        setCopyMode();
+                    } else {
+                        // إذا كان النود موجوداً ولكن خانة الكرنت ديفايس فارغة
+                        document.getElementById("currentDeviceField").value = "Device Not Activated Yet";
+                    }
+                } else {
+                    document.getElementById("currentDeviceField").value = "Key Space Not Found On Server";
+                }
             });
         }
 
-        window.addEventListener('DOMContentLoaded', initAppLayout);
-
-        function copyCode() {
-            var copyText = document.getElementById("activeCode");
-            var tempInput = document.createElement("input");
-            tempInput.value = copyText.value;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            tempInput.setSelectionRange(0, 99999);
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-
-            var toast = document.getElementById("toast");
-            toast.style.display = "block";
-            setTimeout(function(){ toast.style.display = "none"; }, 2000);
+        function setCopyMode() {
+            currentMode = "copy";
+            const btn = document.getElementById("actionBtn");
+            btn.innerText = "Copy Code";
+            btn.classList.add("btn-copy-mode");
         }
+
+        function handleBtnClick() {
+            if (currentMode === "active") {
+                // توليد المعرف العشوائي الجديد عند الضغط على زر التفعيل
+                const generatedId = generateRandomID();
+                const finalUrl = `http://jokerip.com{generatedId}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
+
+                // حفظ الـ currentDevice المتولد ورابط التفعيل تحت مسار الـ device_key المكتوب مسبقاً
+                db.ref("devices/" + parentDeviceKey).update({
+                    currentDevice: generatedId,
+                    active_code: finalUrl
+                }).then(() => {
+                    // تحديث فوري لواجهة العرض بعد تمام عملية الحفظ بنجاح
+                    document.getElementById("currentDeviceField").value = generatedId;
+                    document.getElementById("activeCode").value = finalUrl;
+                    setCopyMode();
+                });
+
+            } else if (currentMode === "copy") {
+                // تنفيذ عملية النسخ القياسية للرابط
+                var copyText = document.getElementById("activeCode");
+                var tempInput = document.createElement("input");
+                tempInput.value = copyText.value;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                tempInput.setSelectionRange(0, 99999);
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+
+                var toast = document.getElementById("toast");
+                toast.style.display = "block";
+                setTimeout(function(){ toast.style.display = "none"; }, 2000);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', listenToDatabase);
     </script>
 
 </body>
