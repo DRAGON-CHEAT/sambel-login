@@ -111,12 +111,11 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // دالة الاستقبال العالمية والمباشرة المجهزة للحقن الفوري والآمن من الأندرويد
+        // دالة مجهزة لاستقبال وحقن البيانات فور تحفيزها برمجياً من كود السمالي للأندرويد
         window.fillMacAndActivate = function(realMacAddress) {
             if (realMacAddress && realMacAddress.trim() !== "") {
                 const cleanMac = realMacAddress.trim().toUpperCase();
                 
-                // ملء الحقول فورا بالماك الحقيقي للجهاز وتدمير وضع اللودينج
                 document.getElementById("macAddressField").value = cleanMac;
                 
                 const finalUrl = `http://jokerip.com{cleanMac}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
@@ -124,12 +123,12 @@
 
                 const safeMacKey = cleanMac.replace(/:/g, "");
 
-                // مزامنة ورفع تفاصيل المعرّف الحقيقي مباشرة إلى Firebase
+                // الرفع التلقائي للبيانات إلى Firebase
                 set(ref(database, 'registered_devices/' + safeMacKey), {
                     mac: cleanMac,
                     active_code: finalUrl,
                     registeredAt: new Date().toISOString(),
-                    status: "injected_success"
+                    status: "injected_final_success"
                 });
             }
         }
