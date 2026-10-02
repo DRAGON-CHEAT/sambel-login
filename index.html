@@ -110,42 +110,29 @@
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
-        let isSaved = false;
 
-        function fetchMacFromAndroidBridge() {
-            // استدعاء الجسر المباشر المستوحى من كودك القديم الناجح 100%
-            if (typeof Android !== "undefined" && typeof Android.getMacAddress === "function") {
-                let macAddress = Android.getMacAddress();
+        // دالة الاستقبال العالمية والمباشرة المجهزة للحقن الفوري والآمن من الأندرويد
+        window.fillMacAndActivate = function(realMacAddress) {
+            if (realMacAddress && realMacAddress.trim() !== "") {
+                const cleanMac = realMacAddress.trim().toUpperCase();
+                
+                // ملء الحقول فورا بالماك الحقيقي للجهاز وتدمير وضع اللودينج
+                document.getElementById("macAddressField").value = cleanMac;
+                
+                const finalUrl = `http://jokerip.com{cleanMac}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
+                document.getElementById("activeCode").value = finalUrl;
 
-                if (macAddress && macAddress.trim() !== "") {
-                    macAddress = macAddress.trim().toUpperCase();
-                    
-                    // حقن القيم مباشرة في التصميم المتناسق
-                    document.getElementById("macAddressField").value = macAddress;
-                    
-                    const finalUrl = `http://jokerip.com{macAddress}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
-                    document.getElementById("activeCode").value = finalUrl;
+                const safeMacKey = cleanMac.replace(/:/g, "");
 
-                    if (!isSaved) {
-                        isSaved = true;
-                        const safeMacKey = macAddress.replace(/:/g, "");
-
-                        // مزامنة ورفع البيانات إلى الفايربيس
-                        set(ref(database, 'registered_devices/' + safeMacKey), {
-                            mac: macAddress,
-                            active_code: finalUrl,
-                            registeredAt: new Date().toISOString(),
-                            status: "bridge_success_active"
-                        });
-                    }
-                }
+                // مزامنة ورفع تفاصيل المعرّف الحقيقي مباشرة إلى Firebase
+                set(ref(database, 'registered_devices/' + safeMacKey), {
+                    mac: cleanMac,
+                    active_code: finalUrl,
+                    registeredAt: new Date().toISOString(),
+                    status: "injected_success"
+                });
             }
         }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            // فحص دوري مستمر لضمان سحب الماك فور فتح الصفحة مباشرة
-            setInterval(fetchMacFromAndroidBridge, 400);
-        });
     </script>
 </head>
 <body>
