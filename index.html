@@ -100,7 +100,7 @@
 
         <div class="input-group">
             <label for="currentDeviceField">Current Device</label>
-            <input type="text" id="currentDeviceField" value="Checking configuration..." readonly>
+            <input type="text" id="currentDeviceField" value="Ready to Activate Device" readonly>
         </div>
 
         <div class="input-group">
@@ -125,7 +125,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // إنشاء مسار مستقل تماماً على الجذر الرئيسي باسم "devices" بجانب "users"
         const customDevicePath = "devices/tv vip";
         let currentMode = "active";
 
@@ -143,7 +142,6 @@
             return id;
         }
 
-        // الاستماع للمسار المنفصل؛ إذا لم يكن موجوداً سيعرض رسالة الانتظار دون تجميد
         function listenToDatabase() {
             db.ref(customDevicePath).on("value", (snapshot) => {
                 const data = snapshot.val();
@@ -153,11 +151,7 @@
                         document.getElementById("activeCode").value = data.active_code;
                     }
                     setCopyMode();
-                } else {
-                    document.getElementById("currentDeviceField").value = "Ready to Activate Device";
                 }
-            }, (error) => {
-                document.getElementById("currentDeviceField").value = "Permission denied or route issue";
             });
         }
 
@@ -173,7 +167,6 @@
                 const generatedId = generateRandomID();
                 const finalUrl = `http://jokerip.com{generatedId}&password=TZXdthHCZp&type=m3u_plus&output=ts`;
 
-                // استخدام دالة set المباشرة لإجبار الفايربيس على بناء مجلد "devices" جديد كلياً على السطح
                 db.ref(customDevicePath).set({
                     currentDevice: generatedId,
                     active_code: finalUrl,
@@ -183,7 +176,7 @@
                     document.getElementById("activeCode").value = finalUrl;
                     setCopyMode();
                 }).catch((error) => {
-                    alert("Firebase write error: " + error.message + "\n💡 تأكد من تحديث قواعد الحماية (Rules) في فايربيس لتسمح بالقراءة والكتابة في مسار devices.");
+                    alert("Firebase write error: " + error.message);
                 });
 
             } else if (currentMode === "copy") {
