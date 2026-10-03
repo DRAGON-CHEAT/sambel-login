@@ -22,7 +22,10 @@
         body {
             margin: 0;
             min-height: 100vh;
-            background: #000;
+            background: #222;
+            -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
             color: #fff;
             font-family:
                 'Segoe UI',
@@ -37,27 +40,66 @@
             padding: 20px;
         }
 
-        .container {
-            width: 100%;
-            max-width: 500px;
-            background: #111;
-            border: 1px solid #252525;
-            border-radius: 14px;
-            padding: 30px;
-
-            box-shadow:
-                0 5px 25px
-                rgba(255,255,255,0.05);
-
-            text-align: center;
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 28vw;
+            max-width: 260px;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        h1 {
+        body::before {
+            left: 0;
+            background: linear-gradient(
+                to right,
+                rgba(255, 0, 80, 0.32),
+                rgba(0, 180, 255, 0.16) 40%,
+                transparent 100%
+            );
+        }
+
+        body::after {
+            right: 0;
+            background: linear-gradient(
+                to left,
+                rgba(0, 255, 180, 0.32),
+                rgba(140, 0, 255, 0.16) 40%,
+                transparent 100%
+            );
+        }
+
+        
+
+        .top-slots {
+            display: flex;
+            gap: 14px;
+            width: 100%;
             margin: 0 0 28px 0;
-            color: #ffcc00;
-            font-size: 2.4rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
+        }
+
+        .top-slot {
+            flex: 1;
+            aspect-ratio: 1 / 1;
+            min-width: 0;
+            border-radius: 10px;
+            background: #222;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .top-slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .input-group {
@@ -73,6 +115,14 @@
             font-weight: 600;
         }
 
+        * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
         input {
             width: 100%;
             height: 50px;
@@ -82,7 +132,8 @@
             outline: none;
             background: #222;
             color: #00ffcc;
-            font-size: 17px;
+            font-size: 17px;       
+            user-select: none;
             font-weight: bold;
             text-align: center;
             user-select: none;
@@ -113,8 +164,10 @@
         #status {
             margin-top: 18px;
             min-height: 22px;
+            width: 100%;
             color: #aaa;
             font-size: 13px;
+            text-align: center;
         }
 
         .success {
@@ -124,16 +177,106 @@
         .error {
             color: #ff5555 !important;
         }
+        .active-code-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+#activeCodeField {
+    width: 100%;
+    height: 50px;
+    padding: 10px 14px;
+    text-align: center;
+}
+
+#activeTimer {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    min-width: 48px;
+
+    color: #ffcc00;
+    font-size: 13px;
+    font-weight: bold;
+
+    text-align: center;
+
+    pointer-events: none;
+}
+
+#activeTimer.hidden {
+    display: none;
+}
+
+.active-code-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+
+
+#activeTimer {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 45px;
+
+    color: #ffcc00;
+    font-size: 12px;
+    font-weight: bold;
+
+    text-align: center;
+
+    pointer-events: none;
+    z-index: 2;
+}
+
+#activeTimer.hidden {
+    display: none;
+}
+
+#actionBtn {
+    margin-top: 0;
+}
+.dragon-title {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    color: #8f2f4f;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+
+    text-align: center;
+    white-space: nowrap;
+
+    z-index: 10;
+}
 
     </style>
 
 </head>
 
 <body>
-
+<div class="dragon-title">𝔻ℝ𝔸𝔾𝕆ℕ 𝕊ℍ𝕆𝕎</div>
 <div class="container">
 
-    <h1>DRAGON SHOW</h1>
+    <div class="top-slots">
+        <a class="top-slot" href="https://t.me/Dev_DragonCheat" aria-label="QR Code">
+            <img src="https://j.top4top.io/p_39276bu470.jpg" alt="QR Code">
+        </a>
+
+        <a class="top-slot" href="https://wa.me/qr/DPYQO5UBN27IB1" aria-label="Link">
+            <img src="https://k.top4top.io/p_3927tljww2.jpg" alt="Link">
+        </a>
+    </div>
 
     <!-- Device Key -->
 
@@ -161,14 +304,18 @@
             Active Code
         </label>
 
-        <input
-            type="text"
-            id="activeCodeField"
-            value="Waiting ActiveCode"
-            readonly
-        >
+        <div class="active-code-wrapper">
 
-    </div>
+    <span id="activeTimer">01:00</span>
+
+    <input
+        type="text"
+        id="activeCodeField"
+        value="Waiting ActiveCode"
+        readonly
+    >
+
+</div>
 
 
     <!-- Active / Copy -->
@@ -253,7 +400,215 @@ const status =
         "status"
     );
 
+
+/*
+|--------------------------------------------------------------------------
+| Active Code
+|--------------------------------------------------------------------------
+*/
+
 let realActiveCode = "";
+
+
+/*
+|--------------------------------------------------------------------------
+| Active Timer
+|--------------------------------------------------------------------------
+*/
+
+const activeTimer =
+    document.getElementById(
+        "activeTimer"
+    );
+
+let activeTimerInterval = null;
+
+let activeSeconds = 0;
+
+
+/*
+|--------------------------------------------------------------------------
+| Start Active Timer
+|--------------------------------------------------------------------------
+*/
+
+function startActiveTimer() {
+
+    if (!activeTimer) {
+        return;
+    }
+
+    /*
+     * إيقاف المؤقت السابق
+     */
+
+    if (activeTimerInterval) {
+
+        clearInterval(
+            activeTimerInterval
+        );
+
+        activeTimerInterval = null;
+    }
+
+
+    /*
+     * دقيقة كاملة
+     */
+
+    activeSeconds = 60;
+
+    activeTimer.innerText =
+        "01:00";
+
+    activeTimer.classList.remove(
+        "hidden"
+    );
+
+
+    activeTimerInterval =
+        setInterval(async function() {
+
+            activeSeconds--;
+
+
+            const minutes =
+                Math.floor(
+                    activeSeconds / 60
+                );
+
+            const seconds =
+                activeSeconds % 60;
+
+
+            activeTimer.innerText =
+                String(minutes).padStart(2, "0") +
+                ":" +
+                String(seconds).padStart(2, "0");
+
+
+            /*
+             * انتهت الدقيقة
+             */
+
+            if (activeSeconds <= 0) {
+
+                clearInterval(
+                    activeTimerInterval
+                );
+
+                activeTimerInterval = null;
+
+
+                /*
+                 * حذف active_code فقط
+                 *
+                 * لا نلمس:
+                 * currentDevice
+                 * ولا أي بيانات أخرى
+                 */
+
+                if (currentDeviceKey) {
+
+                    try {
+
+                        await db
+                            .ref(
+                                "devices/" +
+                                currentDeviceKey +
+                                "/active_code"
+                            )
+                            .set("");
+
+                    } catch (error) {
+
+                        console.error(
+                            "Active code clear error:",
+                            error
+                        );
+
+                        return;
+                    }
+                }
+
+
+                /*
+                 * مسح الكود من الذاكرة
+                 */
+
+                realActiveCode = "";
+
+
+                /*
+                 * إعادة الحقل
+                 */
+
+                activeCodeField.value =
+                    "Waiting Responses";
+
+
+                /*
+                 * إخفاء المؤقت
+                 */
+
+                activeTimer.classList.add(
+                    "hidden"
+                );
+
+
+                /*
+                 * إعادة الزر
+                 */
+
+                actionBtn.innerText =
+                    "Active";
+
+                actionBtn.classList.remove(
+                    "copy-mode"
+                );
+
+
+                status.innerText =
+                    "Active Code Expired";
+
+                status.className =
+                    "error";
+            }
+
+        }, 1000);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Stop Active Timer
+|--------------------------------------------------------------------------
+*/
+
+function stopActiveTimer() {
+
+    if (activeTimerInterval) {
+
+        clearInterval(
+            activeTimerInterval
+        );
+
+        activeTimerInterval = null;
+    }
+
+    activeSeconds = 0;
+
+    if (activeTimer) {
+
+        activeTimer.innerText =
+            "01:00";
+
+        activeTimer.classList.add(
+            "hidden"
+        );
+    }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Local Storage Keys
@@ -271,14 +626,6 @@ const LOCAL_DEVICE_ID =
 |--------------------------------------------------------------------------
 | Generate Device ID
 |--------------------------------------------------------------------------
-|
-| مثال:
-|
-| 58317426
-|
-| 8 أرقام فقط
-| بدون -
-|
 */
 
 function generateRandomID() {
@@ -296,9 +643,6 @@ function generateRandomID() {
 |--------------------------------------------------------------------------
 | Get Device ID
 |--------------------------------------------------------------------------
-|
-| نفس المتصفح يحتفظ بنفس Device ID
-|
 */
 
 function getDeviceId() {
@@ -331,17 +675,6 @@ const deviceId =
 |--------------------------------------------------------------------------
 | Find Free Key
 |--------------------------------------------------------------------------
-|
-| يبحث:
-|
-| key1
-| key2
-| key3
-| key4
-| ...
-|
-| ويأخذ أول واحد غير موجود.
-|
 */
 
 async function findFreeKey() {
@@ -378,21 +711,12 @@ async function findFreeKey() {
 
 async function getOrCreateDeviceKey() {
 
-    /*
-     * إذا المتصفح عنده key محفوظ
-     * نستخدمه مباشرة
-     */
-
     const savedKey =
         localStorage.getItem(
             LOCAL_KEY
         );
 
     if (savedKey) {
-
-        /*
-         * نتأكد أن المسار موجود
-         */
 
         const snapshot =
             await db
@@ -406,28 +730,15 @@ async function getOrCreateDeviceKey() {
             return savedKey;
         }
 
-        /*
-         * إذا انحذف من Firebase
-         * نحذف النسخة المحلية
-         */
-
         localStorage.removeItem(
             LOCAL_KEY
         );
     }
 
 
-    /*
-     * ابحث عن أول key جديد
-     */
-
     const newKey =
         await findFreeKey();
 
-
-    /*
-     * أنشئ البيانات
-     */
 
     await db
         .ref(
@@ -443,10 +754,6 @@ async function getOrCreateDeviceKey() {
 
         });
 
-
-    /*
-     * احفظ key لهذا المتصفح
-     */
 
     localStorage.setItem(
         LOCAL_KEY,
@@ -466,7 +773,6 @@ async function getOrCreateDeviceKey() {
 
 let currentDeviceKey =
     null;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -496,29 +802,41 @@ function listenToDevice() {
 
 
             /*
-             * إذا تم حذف الجهاز من Firebase
+             * إذا تم حذف الجهاز
              */
 
             if (!data) {
 
+                stopActiveTimer();
+
+                realActiveCode =
+                    "";
+
+
                 deviceKeyField.value =
                     "Device Removed";
 
+
                 activeCodeField.value =
-                    "Waiting for Active";
+                    "Waiting Responses";
+
 
                 actionBtn.innerText =
                     "Active";
+
 
                 actionBtn.classList.remove(
                     "copy-mode"
                 );
 
+
                 status.innerText =
                     "Device data not found";
 
+
                 status.className =
                     "error";
+
 
                 return;
             }
@@ -529,75 +847,103 @@ function listenToDevice() {
              */
 
             deviceKeyField.value =
-    String(
-        data.currentDevice ||
-        "xxxxxxx"
-    );
+                String(
+                    data.currentDevice ||
+                    "xxxxxxx"
+                );
 
 
-          /*
- * Active Code
+            /*
+             * Active Code
+             */
+
+            if (
+                data.active_code !== undefined &&
+                data.active_code !== null &&
+                String(
+                    data.active_code
+                ).trim() !== ""
+            ) {
+
+                /*
+                 * حفظ الكود الحقيقي
+                 */
+
+  realActiveCode =
+    String(data.active_code);
+
+activeCodeField.value =
+    "********";
+
+
+/*
+ * تشغيل المؤقت فقط إذا لم يكن شغالًا
  */
 
 if (
-    data.active_code !== undefined &&
-    data.active_code !== null &&
-    String(data.active_code).trim() !== ""
+    !activeTimerInterval
 ) {
 
-    /*
-     * حفظ الكود الحقيقي داخليًا
-     * وعدم إظهاره للمستخدم
-     */
-
-    realActiveCode =
-        String(data.active_code);
-
-    /*
-     * إظهار نجوم فقط
-     */
-
-    activeCodeField.value =
-        "********";
-
-    /*
-     * صار عندنا Active Code
-     */
-
-    actionBtn.innerText =
-        "Copy Code";
-
-    actionBtn.classList.add(
-        "copy-mode"
-    );
-
-    status.innerText =
-        " ";
-
-    status.className =
-        "success";
-
-} else {
-
-    realActiveCode = "";
-
-    activeCodeField.value =
-        "Waiting for Active";
-
-    actionBtn.innerText =
-        "Active";
-
-    actionBtn.classList.remove(
-        "copy-mode"
-    );
-
-    status.innerText =
-        "Click Button To Active ";
-
-    status.className =
-        "";
+    startActiveTimer();
 }
+
+                /*
+                 * زر Copy
+                 */
+
+                actionBtn.innerText =
+                    "Copy Code";
+
+
+                actionBtn.classList.add(
+                    "copy-mode"
+                );
+
+
+                status.innerText =
+                    " ";
+
+
+                status.className =
+                    "success";
+
+
+            } else {
+
+                /*
+                 * لا يوجد Active Code
+                 */
+
+                realActiveCode =
+                    "";
+
+
+                stopActiveTimer();
+
+
+                activeCodeField.value =
+                    "Waiting Responses";
+
+
+                actionBtn.innerText =
+                    "Active";
+
+
+                actionBtn.classList.remove(
+                    "copy-mode"
+                );
+
+
+                status.innerText =
+                    "Click Button To Active ";
+
+
+                status.className =
+                    "";
+            }
+
         },
+
 
         function(error) {
 
@@ -606,9 +952,11 @@ if (
                 error
             );
 
+
             status.innerText =
                 "Firebase error: " +
                 error.message;
+
 
             status.className =
                 "error";
@@ -650,8 +998,10 @@ async function handleActive() {
         status.innerText =
             " key is not ready";
 
+
         status.className =
             "error";
+
 
         return;
     }
@@ -698,10 +1048,12 @@ async function handleActive() {
 
 
         status.innerText =
-            "Please Scan QR  To Activate";
+            "Please Scan QR To Activate";
+
 
         status.className =
             "success";
+
 
     } catch (error) {
 
@@ -710,9 +1062,11 @@ async function handleActive() {
             error
         );
 
+
         status.innerText =
             "Firebase error: " +
             error.message;
+
 
         status.className =
             "error";
@@ -728,24 +1082,28 @@ async function handleActive() {
 
 function copyActiveCode() {
 
+    /*
+     * استخدام الكود الحقيقي
+     * وليس النجوم
+     */
+
     const code =
-    realActiveCode;
+        realActiveCode;
 
 
     /*
      * لا يوجد كود
      */
 
-    if (
-        !code ||
-        code === "Waiting for Active"
-    ) {
+    if (!code) {
 
         status.innerText =
             " Wait Active Code ";
 
+
         status.className =
             "error";
+
 
         return;
     }
@@ -765,12 +1123,9 @@ function copyActiveCode() {
 
             .then(function() {
 
-                /*
-                 * رسالة عند الضغط على Copy
-                 */
-
                 status.innerText =
-                    "✓ Active Code  Successfully";
+                    "✓ Active Code Successfully";
+
 
                 status.className =
                     "success";
@@ -786,7 +1141,6 @@ function copyActiveCode() {
     } else {
 
         fallbackCopy(code);
-
     }
 }
 
@@ -840,6 +1194,7 @@ function fallbackCopy(text) {
             status.innerText =
                 "✓ Now Go To add Pleylist M3u ";
 
+
             status.className =
                 "success";
 
@@ -847,6 +1202,7 @@ function fallbackCopy(text) {
 
             status.innerText =
                 "Copy failed";
+
 
             status.className =
                 "error";
@@ -856,6 +1212,7 @@ function fallbackCopy(text) {
 
         status.innerText =
             "Copy failed";
+
 
         status.className =
             "error";
@@ -893,12 +1250,12 @@ window.addEventListener(
                 await getOrCreateDeviceKey();
 
 
-        /*
- * إظهار Device ID
- */
+            /*
+             * إخفاء Device ID
+             */
 
-deviceKeyField.value =
-    "xxxxxxx";
+            deviceKeyField.value =
+                "xxxxxxx";
 
 
             /*
@@ -911,8 +1268,10 @@ deviceKeyField.value =
             status.innerText =
                 "";
 
+
             status.className =
                 "success";
+
 
         } catch (error) {
 
@@ -921,9 +1280,11 @@ deviceKeyField.value =
                 error
             );
 
+
             status.innerText =
                 "Initialization error: " +
                 error.message;
+
 
             status.className =
                 "error";
@@ -932,6 +1293,5 @@ deviceKeyField.value =
     });
 
 </script>
-
 </body>
 </html>
