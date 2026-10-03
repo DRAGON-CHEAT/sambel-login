@@ -282,6 +282,7 @@ input {
     color: #ff5555 !important;
 }
 
+
 /* =========================================================
    DRAGON SHOW TITLE
    ========================================================= */
@@ -289,43 +290,26 @@ input {
 .dragon-title {
     position: absolute;
 
-    top: clamp(
-        20px,
-        3.5vh,
-        45px
-    );
-
+    top: 26px;
     left: 50%;
     transform: translateX(-50%);
 
     color: #8f2f4f;
 
-    font-size: clamp(
-        14px,
-        1.6vw,
-        26px
-    );
-
+    font-size: 17px;
     font-weight: 600;
-
-    letter-spacing: clamp(
-        1.2px,
-        0.2vw,
-        3px
-    );
+    letter-spacing: 2px;
 
     line-height: 1;
-
     text-align: center;
     white-space: nowrap;
 
-    z-index: 1;
+    z-index: 10;
 }
 
 
 /* =========================================================
    TV MODE
-   Responsive for 32" / 43" / 55" / 65"
    ========================================================= */
 
 @media (min-width: 800px) {
@@ -341,20 +325,14 @@ input {
         max-height: 90vh;
     }
 
-
-    /* =====================================================
-       Dragon Show
-       ===================================================== */
-
+    /* Dragon Show في الزاوية اليسرى */
     .dragon-title {
-        top: clamp(
-            28px,
-            4vh,
-            50px
-        );
+        top: clamp(20px, 3vh, 35px);
+        left: clamp(20px, 3vw, 45px);
+        transform: none;
 
         font-size: clamp(
-            16px,
+            15px,
             1.6vw,
             26px
         );
@@ -364,16 +342,13 @@ input {
             0.2vw,
             3px
         );
+
+        text-align: left;
     }
 
-
-    /* مسافة صغيرة فقط تحت العنوان */
+    /* لا نضيف مسافة إضافية للمربعات */
     .top-slots {
-        margin-top: clamp(
-            8px,
-            1.2vh,
-            14px
-        );
+        margin-top: 0;
     }
 }
 
@@ -554,7 +529,11 @@ input {
         );
     }
 
-
+@media (max-width: 799px) {
+    .top-slots {
+        transform: translateY(-15px);
+    }
+}
     /* =====================================================
        Status
        ===================================================== */
