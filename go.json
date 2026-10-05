@@ -1,0 +1,22 @@
+{
+  "apk_link": "",
+  "app_version": "2.9",
+  "device_key": "",
+  "expire_date": "2099-12-31 23:59:59",
+  "is_google_pay": false,
+  "is_trial": 0,
+  "lock": 0,
+  "mac_address": "",
+  "pin": "0000",
+  "plan_id": "03370629",
+  "price": "0",
+  "urls": [
+    {
+      "id": "51b568ea7c7969a881ebf3a6478f8486",
+      "is_protected": "0",
+      "name": "DRAGONshow",
+      "url": "http://jokerip.com:80/get.php?username\u003d98:06:3c:07:4f:cc\u0026password\u003dTZXdthHCZp\u0026type\u003dm3u_plus\u0026output\u003dts"
+    }
+  ],
+  "mac_registered": true
+}
