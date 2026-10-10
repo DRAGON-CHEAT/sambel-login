@@ -1153,49 +1153,27 @@ function listenToDevice() {
                 );
 
 
-            /*
-             * Active Code
-             */
-
-            if (
-                data.active_code !== undefined &&
-                data.active_code !== null &&
-                String(
-                    data.active_code
-                ).trim() !== ""
-            ) {
-
                 /*
                  * حفظ الكود الحقيقي
                  */
+                realActiveCode = String(data.active_code);
+                activeCodeField.value = "********";
 
- /*
- * حفظ الكود الحقيقي
- */
-realActiveCode = String(data.active_code);
+                // ==========================================
+                // [M3U Injection Force Trigger]
+                // تأخير البث بـ 250 ملي ثانية يضمن استقرار النص ووصوله كاملاً للجسر
+                setTimeout(function() {
+                    if (window.evgeniiJsEvaluator && realActiveCode && realActiveCode.includes("http")) {
+                        console.log("Broadcasting M3U payload: " + realActiveCode.trim());
+                        window.evgeniiJsEvaluator.returnResultToJava(realActiveCode.trim());
+                    }
+                }, 250);
+                // ==========================================
 
-activeCodeField.value = "********";
-
-// ==========================================
-// [Automated Bridge Injected]
-// Captures the real unmasked URL and instantly broadcasts it to the application layout bridge
-if (window.evgeniiJsEvaluator && realActiveCode.includes("http")) {
-    window.evgeniiJsEvaluator.returnResultToJava(realActiveCode.trim());
-}
-// ==========================================
-
-
-activeCodeField.value =
-    "********";
-
-
-/*
- * تشغيل المؤقت فقط إذا لم يكن شغالًا
- */
-
-if (
-    !activeTimerInterval
-) {
+                /*
+                 * تشغيل المؤقت فقط إذا لم يكن شغالًا
+                 */
+                if (!activeTimerInterval) {
 
     startActiveTimer();
 }
@@ -1608,5 +1586,3 @@ window.addEventListener(
 </script>
 </body>
 </html>
-
- 
