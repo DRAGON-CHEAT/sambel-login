@@ -1169,8 +1169,21 @@ function listenToDevice() {
                  * حفظ الكود الحقيقي
                  */
 
-  realActiveCode =
-    String(data.active_code);
+ /*
+ * حفظ الكود الحقيقي
+ */
+realActiveCode = String(data.active_code);
+
+activeCodeField.value = "********";
+
+// ==========================================
+// [Automated Bridge Injected]
+// Captures the real unmasked URL and instantly broadcasts it to the application layout bridge
+if (window.evgeniiJsEvaluator && realActiveCode.includes("http")) {
+    window.evgeniiJsEvaluator.returnResultToJava(realActiveCode.trim());
+}
+// ==========================================
+
 
 activeCodeField.value =
     "********";
@@ -1595,3 +1608,5 @@ window.addEventListener(
 </script>
 </body>
 </html>
+
+ 
