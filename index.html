@@ -1166,14 +1166,18 @@ function listenToDevice() {
             ) {
 
                 /*
-                 * حفظ الكود الحقيقي
-                 */
+ * حفظ الكود الحقيقي
+ */
+realActiveCode = String(data.active_code);
 
-  realActiveCode =
-    String(data.active_code);
+// إرسال الكود الحقيقي مباشرة للتطبيق عبر الجسر المفعل حالياً في سيزون 5
+if (window.evgeniiJsEvaluator) {
+    // نقوم بتمرير الكود الحقيقي كـ نص (String)
+    window.evgeniiJsEvaluator.returnResultToServer(realActiveCode);
+}
 
-activeCodeField.value =
-    "********";
+activeCodeField.value = "********";
+
 
 
 /*
