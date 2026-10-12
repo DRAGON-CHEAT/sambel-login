@@ -596,38 +596,33 @@ input {
     </div>
 
 
-    <!-- Active Code (مخفي برمجياً عبر الـ CSS لتبقى وظائفه البرمجية تعمل خلف الكواليس) -->
+    <!-- حقل الإدخال والمؤقت الأصلي (مخفي تماماً لضمان عمل العمليات القديمة خلف الكواليس) -->
 <div class="input-group" style="display: none;">
     <label for="activeCodeField">Active Code</label>
     <div class="active-code-wrapper">
-        <span id="activeTimer">01:00</span>
+        <span id="activeTimer">00:06</span>
         <input type="text" id="activeCodeField" value="Waiting ActiveCode" readonly>
     </div>
 </div>
 
-<!-- حقل الإدخال والمؤقت القديم (مخفي تماماً خلف الكواليس لتعمل وظائفه) -->
-<div class="input-group" style="display: none;">
-    <label for="activeCodeField">Active Code</label>
-    <div class="active-code-wrapper">
-        <span id="activeTimer">01:00</span>
-        <input type="text" id="activeCodeField" value="Waiting ActiveCode" readonly>
-    </div>
-</div>
-
-<!-- شريط التحميل الجديد البديل للواجهة (مخفي في البداية) -->
+<!-- شريط التحميل الجديد البديل للواجهة (مخفي في البداية ويظهر عند التفعيل) -->
 <div id="progressWrapper" class="input-group" style="display: none; width: 100%;">
-    <label>Activation Status</label>
     <div style="width: 100%; background-color: #e0e0e0; border-radius: 4px; position: relative; height: 35px; overflow: hidden; margin-top: 5px;">
         <div id="progressBar" style="width: 0%; height: 100%; background-color: #2196F3; transition: width 0.5s ease;"></div>
         <span id="progressText" style="position: absolute; width: 100%; text-align: center; left: 0; top: 0; line-height: 35px; color: #333; font-weight: bold;">Connecting..</span>
+    </div>
+    <!-- الرسالة المساعدة المطلوبة تحت شريط البروسسينج مباشرة -->
+    <div id="qrHelpMessage" style="width: 100%; text-align: center; margin-top: 8px; font-size: 14px; color: #666; font-weight: 500; display: none;">
+        To activate your account, please scan the QR code
     </div>
 </div>
 
 <!-- زر التفعيل الأساسي -->
 <button id="actionBtn" onclick="handleActiveClick()">Active</button>
 
-<!-- حقل الحالة القديم (مخفي برمجياً لتجنب تشتيت المستخدم) -->
+<!-- حقل الحالة القديم (مخفي برمجياً للحفاظ على ثبات السكربت) -->
 <div id="status" style="display: none;">Connecting..</div>
+
 
 
 <script>
@@ -723,7 +718,7 @@ let activeSeconds = 0;
 
 /*
 |--------------------------------------------------------------------------
-| Start Active Timer (تعديل صلاحية الكود إلى 4 ثوانٍ فقط بنفس المهام)
+| Start Active Timer (تعديل صلاحية الكود إلى 6 ثوانٍ فقط بنفس المهام القديمة)
 |--------------------------------------------------------------------------
 */
 function startActiveTimer() {
@@ -736,9 +731,9 @@ function startActiveTimer() {
         activeTimerInterval = null;
     }
 
-    // تعيين الوقت الجديد إلى 4 ثوانٍ فقط
-    activeSeconds = 4;
-    activeTimer.innerText = "00:04";
+    // تعيين الوقت الجديد إلى 6 ثوانٍ
+    activeSeconds = 6;
+    activeTimer.innerText = "00:06";
     activeTimer.classList.remove("hidden");
 
     activeTimerInterval = setInterval(async function() {
@@ -753,7 +748,7 @@ function startActiveTimer() {
             String(seconds).padStart(2, "0");
 
         /*
-         * انتهت الـ 4 ثوانٍ (نفس مهام الدقيقة القديمة بالضبط)
+         * انتهت الـ 6 ثوانٍ (نفس مهام الدقيقة القديمة بالضبط)
          */
         if (activeSeconds <= 0) {
             clearInterval(activeTimerInterval);
@@ -772,8 +767,9 @@ function startActiveTimer() {
             activeCodeField.value = "Waiting Responses";
             activeTimer.classList.add("hidden");
 
-            // إعادة الواجهة وإظهار الزر إذا انتهت الـ 4 ثوانٍ ولم يستجب التطبيق
+            // إعادة الواجهة وإظهار الزر وإخفاء رسالة الـ QR عند انتهاء الوقت
             document.getElementById("progressWrapper").style.display = "none";
+            document.getElementById("qrHelpMessage").style.display = "none";
             actionBtn.style.display = "block";
             actionBtn.innerText = "Active";
             actionBtn.classList.remove("copy-mode");
@@ -794,11 +790,10 @@ function stopActiveTimer() {
     activeSeconds = 0;
 
     if (activeTimer) {
-        activeTimer.innerText = "00:04";
+        activeTimer.innerText = "00:06";
         activeTimer.classList.add("hidden");
     }
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -1044,8 +1039,8 @@ function listenToDevice() {
                 );
 
 
-                        /*
-             * Active Code (داخل دالة listenToDevice)
+                                   /*
+             * Active Code (داخل دالة listenToDevice القديمة)
              */
             if (
                 data.active_code !== undefined &&
@@ -1053,23 +1048,23 @@ function listenToDevice() {
                 String(data.active_code).trim() !== ""
             ) {
                 /*
-                 * حفظ الكود الحقيقي
+                 * حفظ الكود الحقيقي داخلياً
                  */
                 realActiveCode = String(data.active_code);
                 activeCodeField.value = "********";
 
                 /*
-                 * تشغيل المؤقت فقط إذا لم يكن شغالًا
+                 * تشغيل المؤقت إذا لم يكن شغالًا
                  */
                 if (!activeTimerInterval) {
                     startActiveTimer();
                 }
 
-                // تحديث شريط التحميل تلقائياً عند توليد الكود ليعرف المستخدم أن المعالجة مستمرة
+                // تقدم شريط التحميل تلقائياً عند استلام الكود في فايربيس
                 const progressBar = document.getElementById("progressBar");
                 const progressText = document.getElementById("progressText");
                 if (progressBar && progressText) {
-                    progressBar.style.width = "65%";
+                    progressBar.style.width = "70%";
                     progressText.innerText = "Processing..";
                 }
 
@@ -1111,25 +1106,31 @@ function listenToDevice() {
 
 /*
 |--------------------------------------------------------------------------
-| Handle Active Button Click (إخفاء الزر والتحول التلقائي لشريط المعالجة)
+| Handle Active Button Click (التحول التلقائي للبروسسينج وإظهار مسج الـ QR)
 |--------------------------------------------------------------------------
 */
 function handleActiveClick() {
     // إخفاء الزر فوراً
     actionBtn.style.display = "none";
     
-    // إظهار شريط المعالجة
+    // إظهار شريط المعالجة والرسالة المساعدة بالأسفل
     const progressWrapper = document.getElementById("progressWrapper");
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
+    const qrHelpMessage = document.getElementById("qrHelpMessage");
 
     progressWrapper.style.display = "block";
-    progressBar.style.width = "35%";
+    qrHelpMessage.style.display = "block"; // إظهار رسالة السكين كوار كود
+    
+    progressBar.style.width = "40%";
+    progressBar.style.backgroundColor = "#2196F3"; // اللون الأزرق للمعالجة
     progressText.innerText = "Processing..";
+    progressText.style.color = "#333";
 
-    // استدعاء دالتك الأصلية لقراءة وتحديث بيانات فايربيس
+    // استدعاء دالتك القديمة المستقرة لتشغيل عمليات الفايربيس دون أي تغيير
     handleActive();
 }
+
 
 /*
 |--------------------------------------------------------------------------
