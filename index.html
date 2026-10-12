@@ -1575,40 +1575,32 @@ window.addEventListener(
 
     });
 
-// دالة يتم استدعاؤها من داخل التطبيق فور نجاح اللصق التلقائي
 async function onAppPastedSuccessfully() {
-    // 1. حذف الـ active_code فوراً من داتا بيس فايربيس دون انتظار المؤقت
     if (currentDeviceKey) {
         try {
             await db.ref("devices/" + currentDeviceKey + "/active_code").set("");
         } catch (error) {
-            console.error("Error clearing code on success:", error);
+            console.error("Error clearing code:", error);
         }
     }
-
-    // 2. إيقاف وتصفير المؤقت برمجياً
     stopActiveTimer();
     realActiveCode = "";
     activeCodeField.value = "Waiting Responses";
 
-    // 3. تحويل شريط التحميل إلى حالة النجاح الكامل
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
-    
     if (progressBar && progressText) {
         progressBar.style.width = "100%";
-        progressBar.style.backgroundColor = "#2e7d32"; // لون أخضر غامق للنجاح
+        progressBar.style.backgroundColor = "#2e7d32";
         progressText.innerText = "Your Account Activated";
         progressText.style.color = "#ffffff";
     }
-
-    // 4. تحديث النصوص المساعدة والزر
     actionBtn.innerText = "Active";
     actionBtn.classList.remove("copy-mode");
     status.innerText = "Activated Successfully!";
     status.className = "success";
 }
-
+    
 </script>
 </body>
 </html>
