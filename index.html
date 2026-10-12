@@ -605,18 +605,30 @@ input {
     </div>
 </div>
 
-<!-- شريط التحميل الجديد البديل للواجهة -->
-<div id="progressWrapper" class="input-group">
+<!-- حقل الإدخال والمؤقت القديم (مخفي تماماً خلف الكواليس لتعمل وظائفه) -->
+<div class="input-group" style="display: none;">
+    <label for="activeCodeField">Active Code</label>
+    <div class="active-code-wrapper">
+        <span id="activeTimer">01:00</span>
+        <input type="text" id="activeCodeField" value="Waiting ActiveCode" readonly>
+    </div>
+</div>
+
+<!-- شريط التحميل الجديد البديل للواجهة (مخفي في البداية) -->
+<div id="progressWrapper" class="input-group" style="display: none; width: 100%;">
     <label>Activation Status</label>
     <div style="width: 100%; background-color: #e0e0e0; border-radius: 4px; position: relative; height: 35px; overflow: hidden; margin-top: 5px;">
-        <div id="progressBar" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.5s ease;"></div>
+        <div id="progressBar" style="width: 0%; height: 100%; background-color: #2196F3; transition: width 0.5s ease;"></div>
         <span id="progressText" style="position: absolute; width: 100%; text-align: center; left: 0; top: 0; line-height: 35px; color: #333; font-weight: bold;">Connecting..</span>
     </div>
 </div>
 
-<!-- زر التفعيل والحالة -->
-<button id="actionBtn" onclick="handleActive()">Active</button>
-<div id="status">Connecting..</div>
+<!-- زر التفعيل الأساسي -->
+<button id="actionBtn" onclick="handleActiveClick()">Active</button>
+
+<!-- حقل الحالة القديم (مخفي برمجياً لتجنب تشتيت المستخدم) -->
+<div id="status" style="display: none;">Connecting..</div>
+
 
 <script>
 
@@ -711,186 +723,82 @@ let activeSeconds = 0;
 
 /*
 |--------------------------------------------------------------------------
-| Start Active Timer
+| Start Active Timer (تعديل صلاحية الكود إلى 4 ثوانٍ فقط بنفس المهام)
 |--------------------------------------------------------------------------
 */
-
 function startActiveTimer() {
-
     if (!activeTimer) {
         return;
     }
 
-    /*
-     * إيقاف المؤقت السابق
-     */
-
     if (activeTimerInterval) {
-
-        clearInterval(
-            activeTimerInterval
-        );
-
+        clearInterval(activeTimerInterval);
         activeTimerInterval = null;
     }
 
+    // تعيين الوقت الجديد إلى 4 ثوانٍ فقط
+    activeSeconds = 4;
+    activeTimer.innerText = "00:04";
+    activeTimer.classList.remove("hidden");
 
-    /*
-     * دقيقة كاملة
-     */
+    activeTimerInterval = setInterval(async function() {
+        activeSeconds--;
 
-    activeSeconds = 60;
+        const minutes = Math.floor(activeSeconds / 60);
+        const seconds = activeSeconds % 60;
 
-    activeTimer.innerText =
-        "01:00";
+        activeTimer.innerText =
+            String(minutes).padStart(2, "0") +
+            ":" +
+            String(seconds).padStart(2, "0");
 
-    activeTimer.classList.remove(
-        "hidden"
-    );
+        /*
+         * انتهت الـ 4 ثوانٍ (نفس مهام الدقيقة القديمة بالضبط)
+         */
+        if (activeSeconds <= 0) {
+            clearInterval(activeTimerInterval);
+            activeTimerInterval = null;
 
-
-    activeTimerInterval =
-        setInterval(async function() {
-
-            activeSeconds--;
-
-
-            const minutes =
-                Math.floor(
-                    activeSeconds / 60
-                );
-
-            const seconds =
-                activeSeconds % 60;
-
-
-            activeTimer.innerText =
-                String(minutes).padStart(2, "0") +
-                ":" +
-                String(seconds).padStart(2, "0");
-
-
-            /*
-             * انتهت الدقيقة
-             */
-
-            if (activeSeconds <= 0) {
-
-                clearInterval(
-                    activeTimerInterval
-                );
-
-                activeTimerInterval = null;
-
-
-                /*
-                 * حذف active_code فقط
-                 *
-                 * لا نلمس:
-                 * currentDevice
-                 * ولا أي بيانات أخرى
-                 */
-
-                if (currentDeviceKey) {
-
-                    try {
-
-                        await db
-                            .ref(
-                                "devices/" +
-                                currentDeviceKey +
-                                "/active_code"
-                            )
-                            .set("");
-
-                    } catch (error) {
-
-                        console.error(
-                            "Active code clear error:",
-                            error
-                        );
-
-                        return;
-                    }
+            if (currentDeviceKey) {
+                try {
+                    await db.ref("devices/" + currentDeviceKey + "/active_code").set("");
+                } catch (error) {
+                    console.error("Active code clear error:", error);
+                    return;
                 }
-
-
-                /*
-                 * مسح الكود من الذاكرة
-                 */
-
-                realActiveCode = "";
-
-
-                /*
-                 * إعادة الحقل
-                 */
-
-                activeCodeField.value =
-                    "Waiting Responses";
-
-
-                /*
-                 * إخفاء المؤقت
-                 */
-
-                activeTimer.classList.add(
-                    "hidden"
-                );
-
-
-                /*
-                 * إعادة الزر
-                 */
-
-                actionBtn.innerText =
-                    "Active";
-
-                actionBtn.classList.remove(
-                    "copy-mode"
-                );
-
-
-                status.innerText =
-                    "Active Code Expired";
-
-                status.className =
-                    "error";
             }
 
-        }, 1000);
+            realActiveCode = "";
+            activeCodeField.value = "Waiting Responses";
+            activeTimer.classList.add("hidden");
+
+            // إعادة الواجهة وإظهار الزر إذا انتهت الـ 4 ثوانٍ ولم يستجب التطبيق
+            document.getElementById("progressWrapper").style.display = "none";
+            actionBtn.style.display = "block";
+            actionBtn.innerText = "Active";
+            actionBtn.classList.remove("copy-mode");
+
+            status.innerText = "Active Code Expired";
+            status.className = "error";
+        }
+
+    }, 1000);
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| Stop Active Timer
-|--------------------------------------------------------------------------
-*/
-
 function stopActiveTimer() {
-
     if (activeTimerInterval) {
-
-        clearInterval(
-            activeTimerInterval
-        );
-
+        clearInterval(activeTimerInterval);
         activeTimerInterval = null;
     }
 
     activeSeconds = 0;
 
     if (activeTimer) {
-
-        activeTimer.innerText =
-            "01:00";
-
-        activeTimer.classList.add(
-            "hidden"
-        );
+        activeTimer.innerText = "00:04";
+        activeTimer.classList.add("hidden");
     }
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -1136,94 +1044,47 @@ function listenToDevice() {
                 );
 
 
-            /*
-             * Active Code
+                        /*
+             * Active Code (داخل دالة listenToDevice)
              */
-
             if (
                 data.active_code !== undefined &&
                 data.active_code !== null &&
-                String(
-                    data.active_code
-                ).trim() !== ""
+                String(data.active_code).trim() !== ""
             ) {
-
                 /*
                  * حفظ الكود الحقيقي
                  */
-
-  realActiveCode =
-    String(data.active_code);
-
-activeCodeField.value =
-    "********";
-
-
-/*
- * تشغيل المؤقت فقط إذا لم يكن شغالًا
- */
-
-if (
-    !activeTimerInterval
-) {
-
-    startActiveTimer();
-}
+                realActiveCode = String(data.active_code);
+                activeCodeField.value = "********";
 
                 /*
-                 * زر Copy
+                 * تشغيل المؤقت فقط إذا لم يكن شغالًا
                  */
+                if (!activeTimerInterval) {
+                    startActiveTimer();
+                }
 
-                actionBtn.innerText =
-                    "Copy Code";
+                // تحديث شريط التحميل تلقائياً عند توليد الكود ليعرف المستخدم أن المعالجة مستمرة
+                const progressBar = document.getElementById("progressBar");
+                const progressText = document.getElementById("progressText");
+                if (progressBar && progressText) {
+                    progressBar.style.width = "65%";
+                    progressText.innerText = "Processing..";
+                }
 
-
-                actionBtn.classList.add(
-                    "copy-mode"
-                );
-
-
-                status.innerText =
-                    " ";
-
-
-                status.className =
-                    "success";
-
+                status.innerText = " ";
+                status.className = "success";
 
             } else {
-
                 /*
                  * لا يوجد Active Code
                  */
-
-                realActiveCode =
-                    "";
-
-
+                realActiveCode = "";
                 stopActiveTimer();
-
-
-                activeCodeField.value =
-                    "Waiting Responses";
-
-
-                actionBtn.innerText =
-                    "Active";
-
-
-                actionBtn.classList.remove(
-                    "copy-mode"
-                );
-
-
-                status.innerText =
-                    "Click Button To Active ";
-
-
-                status.className =
-                    "";
+                activeCodeField.value = "Waiting Responses";
             }
+
 
         },
 
@@ -1247,6 +1108,28 @@ if (
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Handle Active Button Click (إخفاء الزر والتحول التلقائي لشريط المعالجة)
+|--------------------------------------------------------------------------
+*/
+function handleActiveClick() {
+    // إخفاء الزر فوراً
+    actionBtn.style.display = "none";
+    
+    // إظهار شريط المعالجة
+    const progressWrapper = document.getElementById("progressWrapper");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    progressWrapper.style.display = "block";
+    progressBar.style.width = "35%";
+    progressText.innerText = "Processing..";
+
+    // استدعاء دالتك الأصلية لقراءة وتحديث بيانات فايربيس
+    handleActive();
+}
 
 /*
 |--------------------------------------------------------------------------
