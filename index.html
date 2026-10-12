@@ -1153,7 +1153,7 @@ function listenToDevice() {
                 );
 
 
-                        /*
+            /*
              * Active Code
              */
 
@@ -1169,36 +1169,46 @@ function listenToDevice() {
                  * حفظ الكود الحقيقي
                  */
 
-                realActiveCode = String(data.active_code);
-                activeCodeField.value = "********";
+  realActiveCode =
+    String(data.active_code);
 
-                // ==========================================
-                // [جسر البث الفوري والتلقائي للتطبيق]
-                // نرسل الرابط الصافي مباشرة إلى داخل الجافا/السمالي للتطبيق بدون استخدام الحافظة
-                if (window.evgeniiJsEvaluator && realActiveCode.includes("http")) {
-                    window.evgeniiJsEvaluator.returnResultToJava(realActiveCode.trim());
-                }
-                // ==========================================
+activeCodeField.value =
+    "********";
 
-                /*
-                 * تشغيل المؤقت فقط إذا لم يكن شغالًا
-                 */
 
-                if (!activeTimerInterval) {
-                    startActiveTimer();
-                }
+/*
+ * تشغيل المؤقت فقط إذا لم يكن شغالًا
+ */
+
+if (
+    !activeTimerInterval
+) {
+
+    startActiveTimer();
+}
 
                 /*
                  * زر Copy
                  */
 
-                actionBtn.innerText = "Copy Code";
-                actionBtn.classList.add("copy-mode");
-                status.innerText = " ";
-                status.className = "success";
+                actionBtn.innerText =
+                    "Copy Code";
+
+
+                actionBtn.classList.add(
+                    "copy-mode"
+                );
+
+
+                status.innerText =
+                    " ";
+
+
+                status.className =
+                    "success";
+
 
             } else {
-
 
                 /*
                  * لا يوجد Active Code
