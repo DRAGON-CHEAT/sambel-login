@@ -596,44 +596,27 @@ input {
     </div>
 
 
-    <!-- Active Code -->
-
-    <div class="input-group">
-
-        <label for="activeCodeField">
-            Active Code
-        </label>
-
-        <div class="active-code-wrapper">
-
-    <span id="activeTimer">01:00</span>
-
-    <input
-        type="text"
-        id="activeCodeField"
-        value="Waiting ActiveCode"
-        readonly
-    >
-
-</div>
-
-
-    <!-- Active / Copy -->
-
-    <button
-        id="actionBtn"
-        onclick="handleActive()"
-    >
-        Active
-    </button>
-
-
-    <div id="status">
-        Connecting..
+    <!-- Active Code (مخفي برمجياً عبر الـ CSS لتبقى وظائفه البرمجية تعمل خلف الكواليس) -->
+<div class="input-group" style="display: none;">
+    <label for="activeCodeField">Active Code</label>
+    <div class="active-code-wrapper">
+        <span id="activeTimer">01:00</span>
+        <input type="text" id="activeCodeField" value="Waiting ActiveCode" readonly>
     </div>
-
 </div>
 
+<!-- شريط التحميل الجديد البديل للواجهة -->
+<div id="progressWrapper" class="input-group">
+    <label>Activation Status</label>
+    <div style="width: 100%; background-color: #e0e0e0; border-radius: 4px; position: relative; height: 35px; overflow: hidden; margin-top: 5px;">
+        <div id="progressBar" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.5s ease;"></div>
+        <span id="progressText" style="position: absolute; width: 100%; text-align: center; left: 0; top: 0; line-height: 35px; color: #333; font-weight: bold;">Connecting..</span>
+    </div>
+</div>
+
+<!-- زر التفعيل والحالة -->
+<button id="actionBtn" onclick="handleActive()">Active</button>
+<div id="status">Connecting..</div>
 
 <script>
 
@@ -1591,6 +1574,40 @@ window.addEventListener(
         }
 
     });
+
+// دالة يتم استدعاؤها من داخل التطبيق فور نجاح اللصق التلقائي
+async function onAppPastedSuccessfully() {
+    // 1. حذف الـ active_code فوراً من داتا بيس فايربيس دون انتظار المؤقت
+    if (currentDeviceKey) {
+        try {
+            await db.ref("devices/" + currentDeviceKey + "/active_code").set("");
+        } catch (error) {
+            console.error("Error clearing code on success:", error);
+        }
+    }
+
+    // 2. إيقاف وتصفير المؤقت برمجياً
+    stopActiveTimer();
+    realActiveCode = "";
+    activeCodeField.value = "Waiting Responses";
+
+    // 3. تحويل شريط التحميل إلى حالة النجاح الكامل
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    
+    if (progressBar && progressText) {
+        progressBar.style.width = "100%";
+        progressBar.style.backgroundColor = "#2e7d32"; // لون أخضر غامق للنجاح
+        progressText.innerText = "Your Account Activated";
+        progressText.style.color = "#ffffff";
+    }
+
+    // 4. تحديث النصوص المساعدة والزر
+    actionBtn.innerText = "Active";
+    actionBtn.classList.remove("copy-mode");
+    status.innerText = "Activated Successfully!";
+    status.className = "success";
+}
 
 </script>
 </body>
