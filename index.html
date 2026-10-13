@@ -1484,7 +1484,13 @@ async function onAppPastedSuccessfully() {
     status.innerText = "Activated Successfully!";
     status.className = "success";
 }
-    
+    // الانتظار لمدة ثانيتين (2000 مللي ثانية) ليرى المستخدم جملة التفعيل ثم الخروج تلقائياً
+setTimeout(function() {
+    if (window.DragonBridge && typeof window.DragonBridge.closeWebViewNatively === 'function') {
+        window.DragonBridge.closeWebViewNatively();
+    }
+}, 2000);
+
 </script>
 </body>
 </html>
