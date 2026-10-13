@@ -1499,7 +1499,6 @@ window.addEventListener(
     });
 
 async function onAppPastedSuccessfully() {
-    stopActiveTimer();
     if (currentDeviceKey) {
         try {
             await db.ref("devices/" + currentDeviceKey + "/active_code").set("");
@@ -1507,22 +1506,23 @@ async function onAppPastedSuccessfully() {
             console.error("Error clearing code:", error);
         }
     }
+    stopActiveTimer();
     realActiveCode = "";
     activeCodeField.value = "Waiting Responses";
-
-    // Write persistent localStorage activation flag layout down
-    localStorage.setItem("dragon_account_activated", "true");
 
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
     if (progressBar && progressText) {
         progressBar.style.width = "100%";
-        progressBar.style.backgroundColor = "#2e7d32"; // Change to success green
+        progressBar.style.backgroundColor = "#2e7d32";
         progressText.innerText = "Your Account Activated";
         progressText.style.color = "#ffffff";
     }
+    actionBtn.innerText = "Active";
+    actionBtn.classList.remove("copy-mode");
+    status.innerText = "Activated Successfully!";
+    status.className = "success";
 }
-
     
 </script>
 </body>
