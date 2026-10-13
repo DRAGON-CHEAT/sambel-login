@@ -1459,7 +1459,11 @@ window.addEventListener(
 
     });
 
+/*
+ * دالة النجاح الفوري المحدثة صامتاً بالخلفية (بدون أوامر إغلاق)
+ */
 async function onAppPastedSuccessfully() {
+    stopActiveTimer();
     if (currentDeviceKey) {
         try {
             await db.ref("devices/" + currentDeviceKey + "/active_code").set("");
@@ -1467,29 +1471,30 @@ async function onAppPastedSuccessfully() {
             console.error("Error clearing code:", error);
         }
     }
-    stopActiveTimer();
     realActiveCode = "";
     activeCodeField.value = "Waiting Responses";
 
-    // Set permanent localStorage item state
+    // تثبيت حالة التفعيل بذاكرة المتصفح
     localStorage.setItem("dragon_account_activated", "true");
 
+    // تلوين شريط الواجهة التلقائي للأخضر للنجاح
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
+    const qrHelpMessage = document.getElementById("qrHelpMessage");
+
     if (progressBar && progressText) {
         progressBar.style.width = "100%";
-        progressBar.style.backgroundColor = "#2e7d32"; // Success green layout
+        progressBar.style.backgroundColor = "#2e7d32"; 
         progressText.innerText = "Your Account Activated";
         progressText.style.color = "#ffffff";
     }
-
-    // Force safe, native 2-second timeout window close routine
-    setTimeout(function() {
-        if (window.DragonBridge && typeof window.DragonBridge.closeWebViewNatively === 'function') {
-            window.DragonBridge.closeWebViewNatively();
-        }
-    }, 2000);
+    if (qrHelpMessage) {
+        qrHelpMessage.style.display = "none"; 
+    }
+    
+    // تم إزالة الـ setTimeout وأمر closeWebViewNatively ليبقى موقعك حياً بالذاكرة للأبد
 }
+
 </script>
 </body>
 </html>
