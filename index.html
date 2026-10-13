@@ -1471,26 +1471,25 @@ async function onAppPastedSuccessfully() {
     realActiveCode = "";
     activeCodeField.value = "Waiting Responses";
 
+    // Set permanent localStorage item state
+    localStorage.setItem("dragon_account_activated", "true");
+
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
     if (progressBar && progressText) {
         progressBar.style.width = "100%";
-        progressBar.style.backgroundColor = "#2e7d32";
+        progressBar.style.backgroundColor = "#2e7d32"; // Success green layout
         progressText.innerText = "Your Account Activated";
         progressText.style.color = "#ffffff";
     }
-    actionBtn.innerText = "Active";
-    actionBtn.classList.remove("copy-mode");
-    status.innerText = "Activated Successfully!";
-    status.className = "success";
-}
-    // الانتظار لمدة ثانيتين (2000 مللي ثانية) ليرى المستخدم جملة التفعيل ثم الخروج تلقائياً
-setTimeout(function() {
-    if (window.DragonBridge && typeof window.DragonBridge.closeWebViewNatively === 'function') {
-        window.DragonBridge.closeWebViewNatively();
-    }
-}, 2000);
 
+    // Force safe, native 2-second timeout window close routine
+    setTimeout(function() {
+        if (window.DragonBridge && typeof window.DragonBridge.closeWebViewNatively === 'function') {
+            window.DragonBridge.closeWebViewNatively();
+        }
+    }, 2000);
+}
 </script>
 </body>
 </html>
