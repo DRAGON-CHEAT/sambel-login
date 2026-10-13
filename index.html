@@ -1042,53 +1042,86 @@ function listenToDevice() {
                                    /*
              * Active Code (داخل دالة listenToDevice القديمة)
              */
-            if (
-                data.active_code !== undefined &&
-                data.active_code !== null &&
-                String(data.active_code).trim() !== ""
-            ) {
-                /*
-                 * حفظ الكود الحقيقي داخلياً
-                 */
-                realActiveCode = String(data.active_code);
-                activeCodeField.value = "********";
+            /*
+ * Active Code (Inside your listenToDevice function)
+ */
+if (
+    data.active_code !== undefined &&
+    data.active_code !== null &&
+    String(data.active_code).trim() !== "" &&
+    String(data.active_code) !== "********" // Force it to ignore placeholders
+) {
+    /*
+     * 1. Save the real code locally
+     */
+    realActiveCode = String(data.active_code);
+    activeCodeField.value = "********";
 
-                /*
-                 * تشغيل المؤقت إذا لم يكن شغالًا
-                 */
-                if (!activeTimerInterval) {
-                    startActiveTimer();
-                }
-
-                // تقدم شريط التحميل تلقائياً عند استلام الكود في فايربيس
-                const progressBar = document.getElementById("progressBar");
-                const progressText = document.getElementById("progressText");
-                if (progressBar && progressText) {
-                    progressBar.style.width = "70%";
-                    progressText.innerText = "Processing..";
-                }
-
-                status.innerText = " ";
-                status.className = "success";
-
-            } else {
-                /*
-                 * لا يوجد Active Code
-                 */
-                realActiveCode = "";
-                stopActiveTimer();
-                activeCodeField.value = "Waiting Responses";
-            }
-
-
-        },
-
-// الانتظار لمدة ثانيتين (2000 مللي ثانية) ليرى المستخدم جملة التفعيل ثم الخروج تلقائياً
-setTimeout(function() {
-    if (window.DragonBridge && typeof window.DragonBridge.closeWebViewNatively === 'function') {
-        window.DragonBridge.closeWebViewNatively();
+    if (!activeTimerInterval) {
+        startActiveTimer();
     }
-}, 2000);
+
+    // Move progress bar to 70%
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    if (progressBar && progressText) {
+        progressBar.style.width = "70%";
+        progressText.innerText = "Processing..";
+    }
+
+    status.innerText = " ";
+    status.className = "success";
+
+} else {
+    // Only reset if it was previously active, don't trigger exit hooks here
+    if(realActiveCode !== "") {
+        realActiveCode = "";
+        stopActiveTimer();
+        activeCodeField.value = "Waiting Responses";
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| App Paste Success Interface (Triggers ONLY when the app successfully pastes)
+|--------------------------------------------------------------------------
+*/
+async function onAppPastedSuccessfully() {
+    // Stop loops immediately so it doesn't repeat
+    stopActiveTimer();
+    
+    if (currentDeviceKey) {
+        try {
+            // Clear code from firebase so it can't be reused
+            await db.ref("devices/" + currentDeviceKey + "/active_code").set("");
+        } catch (error) {
+            console.error("Error clearing code:", error);
+        }
+    }
+
+    realActiveCode = "";
+    activeCodeField.value = "Waiting Responses";
+
+    // Lock activation state locally so it stays permanent
+    localStorage.setItem("dragon_account_activated", "true");
+
+    // Complete the UI change to 100% Green
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    if (progressBar && progressText) {
+        progressBar.style.width = "100%";
+        progressBar.style.backgroundColor = "#2e7d32"; // Success green
+        progressText.innerText = "Your Account Activated";
+        progressText.style.color = "#ffffff";
+    }
+
+    // CRITICAL FIX: The 2-second exit timer stays safely inside this success block ONLY
+    setTimeout(function() {
+        if (window.DragonBridge && typeof window.DragonBridge.closeWebViewNatively === 'function') {
+            window.DragonBridge.closeWebViewNatively();
+        }
+    }, 2000);
+}
 
         function(error) {
 
