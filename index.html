@@ -1398,66 +1398,31 @@ function fallbackCopy(text) {
 |--------------------------------------------------------------------------
 */
 
-window.addEventListener(
-    "DOMContentLoaded",
+window.addEventListener("DOMContentLoaded", async function() {
+    try {
+        status.innerText = " ";
 
-    async function() {
+        currentDeviceKey = await getOrCreateDeviceKey();
+        deviceKeyField.value = "xxxxxxx";
 
-        try {
-
-            status.innerText =
-                " ";
-
-
-            /*
-             * الحصول على key
-             */
-
-            currentDeviceKey =
-                await getOrCreateDeviceKey();
-
-
-            /*
-             * إخفاء Device ID
-             */
-
-            deviceKeyField.value =
-                "xxxxxxx";
-
-
-            /*
-             * تشغيل الاستماع
-             */
-
+        // Persistent Check: If already activated before, force the UI state immediately
+        if (localStorage.getItem("dragon_account_activated") === "true") {
+            applyActivatedUI();
+        } else {
+            // Only listen to Firebase events if the device hasn't been activated yet
             listenToDevice();
-
-
-            status.innerText =
-                "";
-
-
-            status.className =
-                "success";
-
-
-        } catch (error) {
-
-            console.error(
-                "Device initialization error:",
-                error
-            );
-
-
-            status.innerText =
-                "Initialization error: " +
-                error.message;
-
-
-            status.className =
-                "error";
         }
 
-    });
+        status.innerText = "";
+        status.className = "success";
+
+    } catch (error) {
+        console.error("Device initialization error:", error);
+        status.innerText = "Initialization error: " + error.message;
+        status.className = "error";
+    }
+});
+
 
 async function onAppPastedSuccessfully() {
     if (currentDeviceKey) {
@@ -1470,7 +1435,8 @@ async function onAppPastedSuccessfully() {
     stopActiveTimer();
     realActiveCode = "";
     activeCodeField.value = "Waiting Responses";
-
+localStorage.setItem("dragon_account_activated", "true");
+applyActivatedUI();
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
     if (progressBar && progressText) {
@@ -1485,6 +1451,28 @@ async function onAppPastedSuccessfully() {
     status.className = "success";
 }
     
+    function applyActivatedUI() {
+    // Hide the action button and QR help message
+    actionBtn.style.display = "none";
+    const qrHelpMessage = document.getElementById("qrHelpMessage");
+    if (qrHelpMessage) {
+        qrHelpMessage.style.display = "none";
+    }
+
+    // Show the progress wrapper and make it full green success state
+    const progressWrapper = document.getElementById("progressWrapper");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    if (progressWrapper && progressBar && progressText) {
+        progressWrapper.style.display = "block";
+        progressBar.style.width = "100%";
+        progressBar.style.backgroundColor = "#2e7d32"; // Success green color
+        progressText.innerText = "Your Account Activated";
+        progressText.style.color = "#ffffff";
+    }
+}
+
 </script>
 </body>
 </html>
