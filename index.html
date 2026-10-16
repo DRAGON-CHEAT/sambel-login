@@ -859,97 +859,64 @@ const deviceId =
 
 /*
 |--------------------------------------------------------------------------
-| Find Free Key
-|--------------------------------------------------------------------------
-*/
-
-async function findFreeKey() {
-
-    let number = 1;
-
-    while (true) {
-
-        const key =
-            "key" + number;
-
-        const snapshot =
-            await db
-                .ref(
-                    "devices/" + key
-                )
-                .once("value");
-
-        if (!snapshot.exists()) {
-
-            return key;
-        }
-
-        number++;
-    }
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Or Create Device Key
+| Get Or Create Device Key - منع تكرار المفتاح لنفس الجهاز
 |--------------------------------------------------------------------------
 */
 
 async function getOrCreateDeviceKey() {
+    const devicesRef = db.ref("devices");
 
-    const savedKey =
-        localStorage.getItem(
-            LOCAL_KEY
-        );
+    // معاملة ذرّية: البحث عن الجهاز أو إنشاء مفتاح له مرة واحدة
+    const result = await devicesRef.transaction(function (devices) {
+        devices = devices || {};
 
-    if (savedKey) {
-
-        const snapshot =
-            await db
-                .ref(
-                    "devices/" + savedKey
-                )
-                .once("value");
-
-        if (snapshot.exists()) {
-
-            return savedKey;
+        // أولًا: إذا كان الجهاز مسجلًا، لا تنشئ مفتاحًا جديدًا
+        for (const key in devices) {
+            if (
+                devices[key] &&
+                String(devices[key].currentDevice || "") === String(deviceId)
+            ) {
+                return devices;
+            }
         }
 
-        localStorage.removeItem(
-            LOCAL_KEY
-        );
+        // ثانيًا: إذا لم يكن مسجلًا، ابحث عن أول مفتاح متاح
+        let number = 1;
+        let newKey;
+
+        do {
+            newKey = "key" + number;
+            number++;
+        } while (Object.prototype.hasOwnProperty.call(devices, newKey));
+
+        // إنشاء المفتاح الجديد للجهاز غير المسجل فقط
+        devices[newKey] = {
+            currentDevice: deviceId,
+            active_code: ""
+        };
+
+        return devices;
+    });
+
+    if (!result.committed || !result.snapshot.exists()) {
+        throw new Error("Could not obtain device key");
     }
 
+    const devices = result.snapshot.val();
 
-    const newKey =
-        await findFreeKey();
+    // استخراج المفتاح الذي يخص هذا الجهاز من النتيجة النهائية
+    for (const key in devices) {
+        if (
+            devices[key] &&
+            String(devices[key].currentDevice || "") === String(deviceId)
+        ) {
+            localStorage.setItem(LOCAL_KEY, key);
+            return key;
+        }
+    }
 
-
-    await db
-        .ref(
-            "devices/" + newKey
-        )
-        .set({
-
-            currentDevice:
-                deviceId,
-
-            active_code:
-                ""
-
-        });
-
-
-    localStorage.setItem(
-        LOCAL_KEY,
-        newKey
-    );
-
-
-    return newKey;
+    throw new Error("Device key not found after transaction");
 }
-
 
 /*
 |--------------------------------------------------------------------------
