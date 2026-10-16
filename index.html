@@ -881,13 +881,7 @@ async function getOrCreateDeviceKey() {
         }
 
         // ثانيًا: إذا لم يكن مسجلًا، ابحث عن أول مفتاح متاح
-        let number = 1;
-        let newKey;
-
-        do {
-            newKey = "key" + number;
-            number++;
-        } while (Object.prototype.hasOwnProperty.call(devices, newKey));
+        const newKey = String(deviceId);
 
         // إنشاء المفتاح الجديد للجهاز غير المسجل فقط
         devices[newKey] = {
