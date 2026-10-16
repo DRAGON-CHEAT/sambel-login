@@ -606,7 +606,7 @@ input {
 </div>
 
 <!-- شريط التحميل الجديد البديل للواجهة (مخفي في البداية ويظهر عند التفعيل) -->
-<div id="progressWrapper" class="input-group" style="display: none; width: 100%;">
+<Active="progressWrapper" class="input-group" style="display: none; width: 100%;">
     <div style="width: 100%; background-color: #e0e0e0; border-radius: 4px; position: relative; height: 35px; overflow: hidden; margin-top: 5px;">
         <div id="progressBar" style="width: 0%; height: 100%; background-color: #2196F3; transition: width 0.5s ease;"></div>
         <span id="progressText" style="position: absolute; width: 100%; text-align: center; left: 0; top: 0; line-height: 35px; color: #333; font-weight: bold;">Connecting..</span>
@@ -618,7 +618,7 @@ input {
 </div>
 
 <!-- زر التفعيل الأساسي -->
-<button id="actionBtn" onclick="handleActiveClick()">Active</button>
+<button id="actionBtn" onclick="handleActiveClick()">Activated</button>
 
 <!-- حقل الحالة القديم (مخفي برمجياً للحفاظ على ثبات السكربت) -->
 <div id="status" style="display: none;">Connecting..</div>
@@ -732,7 +732,7 @@ function startActiveTimer() {
     }
 
     // تعيين الوقت الجديد إلى 6 ثوانٍ
-    activeSeconds = 6;
+    activeSeconds = 2;
     activeTimer.innerText = "00:06";
     activeTimer.classList.remove("hidden");
 
@@ -1359,7 +1359,7 @@ function fallbackCopy(text) {
         if (successful) {
 
             status.innerText =
-                "✓ Now Go To Add Your Playlist M3U ";
+                "✓ Now Go  ";
 
 
             status.className =
