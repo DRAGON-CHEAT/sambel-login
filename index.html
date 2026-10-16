@@ -797,16 +797,12 @@ function stopActiveTimer() {
 
 /*
 |--------------------------------------------------------------------------
-| Local Storage Keys
+| Local Storage Keys - التعديل هنا لربط المفاتيح مباشرة
 |--------------------------------------------------------------------------
 */
 
-const LOCAL_KEY =
-    "dragon_device_key";
-
-const LOCAL_DEVICE_ID =
-    "dragon_device_id";
-
+const LOCAL_KEY = "dragon_device_key";
+const LOCAL_DEVICE_ID = "dragon_device_id";
 
 /*
 |--------------------------------------------------------------------------
@@ -815,7 +811,6 @@ const LOCAL_DEVICE_ID =
 */
 
 function generateRandomID() {
-
     return String(
         Math.floor(
             10000000 +
@@ -824,7 +819,6 @@ function generateRandomID() {
     );
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | Get Device ID
@@ -832,84 +826,49 @@ function generateRandomID() {
 */
 
 function getDeviceId() {
-
-    let id =
-        localStorage.getItem(
-            LOCAL_DEVICE_ID
-        );
+    let id = localStorage.getItem(LOCAL_DEVICE_ID);
 
     if (!id) {
-
-        id =
-            generateRandomID();
-
-        localStorage.setItem(
-            LOCAL_DEVICE_ID,
-            id
-        );
+        id = generateRandomID();
+        localStorage.setItem(LOCAL_DEVICE_ID, id);
     }
 
     return id;
 }
 
-
-const deviceId =
-    getDeviceId();
-
+const deviceId = getDeviceId();
 
 /*
 |--------------------------------------------------------------------------
-| Get Or Create Device Key - منع تكرار المفتاح لنفس الجهاز
+| Get Or Create Device Key - الحل البديل والآمن لمنع التكرار وحماية الأكواد
 |--------------------------------------------------------------------------
 */
 
 async function getOrCreateDeviceKey() {
-    const devicesRef = db.ref("devices");
+    // التوجه مباشرة لمسار الجهاز الخاص بك بناءً على الـ ID دون قراءة بقية الأجهزة
+    const deviceRef = db.ref("devices/" + deviceId);
 
-    // معاملة ذرّية: البحث عن الجهاز أو إنشاء مفتاح له مرة واحدة
-    const result = await devicesRef.transaction(function (devices) {
-        devices = devices || {};
+    try {
+        const snapshot = await deviceRef.once("value");
+        let data = snapshot.val();
 
-        // أولًا: إذا كان الجهاز مسجلًا، لا تنشئ مفتاحًا جديدًا
-        for (const key in devices) {
-            if (
-                devices[key] &&
-                String(devices[key].currentDevice || "") === String(deviceId)
-            ) {
-                return devices;
-            }
+        // إذا كان الجهاز غير مسجل، نقوم بإنشائه مباشرة بكامل حقوله الحقيقية
+        if (!data) {
+            data = {
+                currentDevice: deviceId,
+                active_code: ""
+            };
+            await deviceRef.set(data);
         }
 
-        // ثانيًا: إذا لم يكن مسجلًا، ابحث عن أول مفتاح متاح
-        const newKey = String(deviceId);
+        // حفظ المفتاح الصحيح وإرجاعه لتشغيل الاستماع
+        localStorage.setItem(LOCAL_KEY, deviceId);
+        return deviceId;
 
-        // إنشاء المفتاح الجديد للجهاز غير المسجل فقط
-        devices[newKey] = {
-            currentDevice: deviceId,
-            active_code: ""
-        };
-
-        return devices;
-    });
-
-    if (!result.committed || !result.snapshot.exists()) {
-        throw new Error("Could not obtain device key");
+    } catch (error) {
+        console.error("Error obtaining device key safely:", error);
+        throw new Error("Could not obtain device key safely");
     }
-
-    const devices = result.snapshot.val();
-
-    // استخراج المفتاح الذي يخص هذا الجهاز من النتيجة النهائية
-    for (const key in devices) {
-        if (
-            devices[key] &&
-            String(devices[key].currentDevice || "") === String(deviceId)
-        ) {
-            localStorage.setItem(LOCAL_KEY, key);
-            return key;
-        }
-    }
-
-    throw new Error("Device key not found after transaction");
 }
 
 /*
@@ -918,8 +877,7 @@ async function getOrCreateDeviceKey() {
 |--------------------------------------------------------------------------
 */
 
-let currentDeviceKey =
-    null;
+let currentDeviceKey = null;
 
 /*
 |--------------------------------------------------------------------------
@@ -928,100 +886,52 @@ let currentDeviceKey =
 */
 
 function listenToDevice() {
-
     if (!currentDeviceKey) {
         return;
     }
 
-
-    const devicePath =
-        "devices/" +
-        currentDeviceKey;
-
+    const devicePath = "devices/" + currentDeviceKey;
 
     db.ref(devicePath).on(
         "value",
-
         function(snapshot) {
-
-            const data =
-                snapshot.val();
-
+            const data = snapshot.val();
 
             /*
              * إذا تم حذف الجهاز
              */
-
             if (!data) {
-
                 stopActiveTimer();
-
-                realActiveCode =
-                    "";
-
-
-                deviceKeyField.value =
-                    "Device Removed";
-
-
-                activeCodeField.value =
-                    "Waiting Responses";
-
-
-                actionBtn.innerText =
-                    "Active";
-
-
-                actionBtn.classList.remove(
-                    "copy-mode"
-                );
-
-
-                status.innerText =
-                    "Device data not found";
-
-
-                status.className =
-                    "error";
-
-
+                realActiveCode = "";
+                deviceKeyField.value = "Device Removed";
+                activeCodeField.value = "Waiting Responses";
+                actionBtn.innerText = "Active";
+                actionBtn.classList.remove("copy-mode");
+                status.innerText = "Device data not found";
+                status.className = "error";
                 return;
             }
 
+            /*
+             * Device Key - هنا سيقرأ الـ currentDevice الحقيقي والآمن دائماً
+             */
+            deviceKeyField.value = String(data.currentDevice || "xxxxxxx");
 
             /*
-             * Device Key
-             */
-
-            deviceKeyField.value =
-                String(
-                    data.currentDevice ||
-                    "xxxxxxx"
-                );
-
-
-                                   /*
-             * Active Code (داخل دالة listenToDevice القديمة)
+             * Active Code
              */
             if (
                 data.active_code !== undefined &&
                 data.active_code !== null &&
                 String(data.active_code).trim() !== ""
             ) {
-                /*
-                 * حفظ الكود الحقيقي داخلياً
-                 */
                 realActiveCode = String(data.active_code);
                 activeCodeField.value = "********";
 
-                /*
-                 * تشغيل المؤقت إذا لم يكن شغالًا
-                 */
                 if (!activeTimerInterval) {
                     startActiveTimer();
                 }
 
-                // تقدم شريط التحميل تلقائياً عند استلام الكود في فايربيس
                 const progressBar = document.getElementById("progressBar");
                 const progressText = document.getElementById("progressText");
                 if (progressBar && progressText) {
@@ -1031,39 +941,19 @@ function listenToDevice() {
 
                 status.innerText = " ";
                 status.className = "success";
-
             } else {
-                /*
-                 * لا يوجد Active Code
-                 */
                 realActiveCode = "";
                 stopActiveTimer();
                 activeCodeField.value = "Waiting Responses";
             }
-
-
         },
-
-
         function(error) {
-
-            console.error(
-                "Firebase read error:",
-                error
-            );
-
-
-            status.innerText =
-                "Firebase error: " +
-                error.message;
-
-
-            status.className =
-                "error";
+            console.error("Firebase read error:", error);
+            status.innerText = "Firebase error: " + error.message;
+            status.className = "error";
         }
     );
 }
-
 
 /*
 |--------------------------------------------------------------------------
