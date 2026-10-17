@@ -606,7 +606,7 @@ input {
 </div>
 
 <!-- شريط التحميل الجديد البديل للواجهة (مخفي في البداية ويظهر عند التفعيل) -->
-<div id="progressWrapper" class="input-group" style="display: none; width: 100%;">
+<Active="progressWrapper" class="input-group" style="display: none; width: 100%;">
     <div style="width: 100%; background-color: #e0e0e0; border-radius: 4px; position: relative; height: 35px; overflow: hidden; margin-top: 5px;">
         <div id="progressBar" style="width: 0%; height: 100%; background-color: #2196F3; transition: width 0.5s ease;"></div>
         <span id="progressText" style="position: absolute; width: 100%; text-align: center; left: 0; top: 0; line-height: 35px; color: #333; font-weight: bold;">Connecting..</span>
@@ -618,7 +618,7 @@ input {
 </div>
 
 <!-- زر التفعيل الأساسي -->
-<button id="actionBtn" onclick="handleActiveClick()">Active Account</button>
+<button id="actionBtn" onclick="handleActiveClick()">Activated</button>
 
 <!-- حقل الحالة القديم (مخفي برمجياً للحفاظ على ثبات السكربت) -->
 <div id="status" style="display: none;">Connecting..</div>
@@ -859,58 +859,97 @@ const deviceId =
 
 /*
 |--------------------------------------------------------------------------
-| Get Or Create Device Key - منع تكرار المفتاح لنفس الجهاز
+| Find Free Key
+|--------------------------------------------------------------------------
+*/
+
+async function findFreeKey() {
+
+    let number = 1;
+
+    while (true) {
+
+        const key =
+            "key" + number;
+
+        const snapshot =
+            await db
+                .ref(
+                    "devices/" + key
+                )
+                .once("value");
+
+        if (!snapshot.exists()) {
+
+            return key;
+        }
+
+        number++;
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Get Or Create Device Key
 |--------------------------------------------------------------------------
 */
 
 async function getOrCreateDeviceKey() {
-    const devicesRef = db.ref("devices");
 
-    // معاملة ذرّية: البحث عن الجهاز أو إنشاء مفتاح له مرة واحدة
-    const result = await devicesRef.transaction(function (devices) {
-        devices = devices || {};
+    const savedKey =
+        localStorage.getItem(
+            LOCAL_KEY
+        );
 
-        // أولًا: إذا كان الجهاز مسجلًا، لا تنشئ مفتاحًا جديدًا
-        for (const key in devices) {
-            if (
-                devices[key] &&
-                String(devices[key].currentDevice || "") === String(deviceId)
-            ) {
-                return devices;
-            }
+    if (savedKey) {
+
+        const snapshot =
+            await db
+                .ref(
+                    "devices/" + savedKey
+                )
+                .once("value");
+
+        if (snapshot.exists()) {
+
+            return savedKey;
         }
 
-        // ثانيًا: إذا لم يكن مسجلًا، ابحث عن أول مفتاح متاح
-        const newKey = String(deviceId);
-
-        // إنشاء المفتاح الجديد للجهاز غير المسجل فقط
-        devices[newKey] = {
-            currentDevice: deviceId,
-            active_code: ""
-        };
-
-        return devices;
-    });
-
-    if (!result.committed || !result.snapshot.exists()) {
-        throw new Error("Could not obtain device key");
+        localStorage.removeItem(
+            LOCAL_KEY
+        );
     }
 
-    const devices = result.snapshot.val();
 
-    // استخراج المفتاح الذي يخص هذا الجهاز من النتيجة النهائية
-    for (const key in devices) {
-        if (
-            devices[key] &&
-            String(devices[key].currentDevice || "") === String(deviceId)
-        ) {
-            localStorage.setItem(LOCAL_KEY, key);
-            return key;
-        }
-    }
+    const newKey =
+        await findFreeKey();
 
-    throw new Error("Device key not found after transaction");
+
+    await db
+        .ref(
+            "devices/" + newKey
+        )
+        .set({
+
+            currentDevice:
+                deviceId,
+
+            active_code:
+                ""
+
+        });
+
+
+    localStorage.setItem(
+        LOCAL_KEY,
+        newKey
+    );
+
+
+    return newKey;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -1320,7 +1359,7 @@ function fallbackCopy(text) {
         if (successful) {
 
             status.innerText =
-                "✓ Now Go To Add Your Playlist M3U ";
+                "✓ Now Go  ";
 
 
             status.className =
