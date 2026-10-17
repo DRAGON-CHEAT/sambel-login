@@ -618,7 +618,7 @@ input {
 </div>
 
 <!-- زر التفعيل الأساسي -->
-<button id="actionBtn" onclick="handleActiveClick()">Active</button>
+<button id="actionBtn" onclick="handleActiveClick()">Active Account</button>
 
 <!-- حقل الحالة القديم (مخفي برمجياً للحفاظ على ثبات السكربت) -->
 <div id="status" style="display: none;">Connecting..</div>
@@ -732,7 +732,7 @@ function startActiveTimer() {
     }
 
     // تعيين الوقت الجديد إلى 6 ثوانٍ
-    activeSeconds = 6;
+    activeSeconds = 2;
     activeTimer.innerText = "00:06";
     activeTimer.classList.remove("hidden");
 
@@ -859,97 +859,58 @@ const deviceId =
 
 /*
 |--------------------------------------------------------------------------
-| Find Free Key
-|--------------------------------------------------------------------------
-*/
-
-async function findFreeKey() {
-
-    let number = 1;
-
-    while (true) {
-
-        const key =
-            "key" + number;
-
-        const snapshot =
-            await db
-                .ref(
-                    "devices/" + key
-                )
-                .once("value");
-
-        if (!snapshot.exists()) {
-
-            return key;
-        }
-
-        number++;
-    }
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Get Or Create Device Key
+| Get Or Create Device Key - منع تكرار المفتاح لنفس الجهاز
 |--------------------------------------------------------------------------
 */
 
 async function getOrCreateDeviceKey() {
+    const devicesRef = db.ref("devices");
 
-    const savedKey =
-        localStorage.getItem(
-            LOCAL_KEY
-        );
+    // معاملة ذرّية: البحث عن الجهاز أو إنشاء مفتاح له مرة واحدة
+    const result = await devicesRef.transaction(function (devices) {
+        devices = devices || {};
 
-    if (savedKey) {
-
-        const snapshot =
-            await db
-                .ref(
-                    "devices/" + savedKey
-                )
-                .once("value");
-
-        if (snapshot.exists()) {
-
-            return savedKey;
+        // أولًا: إذا كان الجهاز مسجلًا، لا تنشئ مفتاحًا جديدًا
+        for (const key in devices) {
+            if (
+                devices[key] &&
+                String(devices[key].currentDevice || "") === String(deviceId)
+            ) {
+                return devices;
+            }
         }
 
-        localStorage.removeItem(
-            LOCAL_KEY
-        );
+        // ثانيًا: إذا لم يكن مسجلًا، ابحث عن أول مفتاح متاح
+        const newKey = String(deviceId);
+
+        // إنشاء المفتاح الجديد للجهاز غير المسجل فقط
+        devices[newKey] = {
+            currentDevice: deviceId,
+            active_code: ""
+        };
+
+        return devices;
+    });
+
+    if (!result.committed || !result.snapshot.exists()) {
+        throw new Error("Could not obtain device key");
     }
 
+    const devices = result.snapshot.val();
 
-    const newKey =
-        await findFreeKey();
+    // استخراج المفتاح الذي يخص هذا الجهاز من النتيجة النهائية
+    for (const key in devices) {
+        if (
+            devices[key] &&
+            String(devices[key].currentDevice || "") === String(deviceId)
+        ) {
+            localStorage.setItem(LOCAL_KEY, key);
+            return key;
+        }
+    }
 
-
-    await db
-        .ref(
-            "devices/" + newKey
-        )
-        .set({
-
-            currentDevice:
-                deviceId,
-
-            active_code:
-                ""
-
-        });
-
-
-    localStorage.setItem(
-        LOCAL_KEY,
-        newKey
-    );
-
-
-    return newKey;
+    throw new Error("Device key not found after transaction");
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -1459,7 +1420,11 @@ window.addEventListener(
 
     });
 
+/*
+ * دالة النجاح الفوري المحدثة صامتاً بالخلفية (بدون أوامر إغلاق)
+ */
 async function onAppPastedSuccessfully() {
+    stopActiveTimer();
     if (currentDeviceKey) {
         try {
             await db.ref("devices/" + currentDeviceKey + "/active_code").set("");
@@ -1467,24 +1432,30 @@ async function onAppPastedSuccessfully() {
             console.error("Error clearing code:", error);
         }
     }
-    stopActiveTimer();
     realActiveCode = "";
     activeCodeField.value = "Waiting Responses";
 
+    // تثبيت حالة التفعيل بذاكرة المتصفح
+    localStorage.setItem("dragon_account_activated", "true");
+
+    // تلوين شريط الواجهة التلقائي للأخضر للنجاح
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
+    const qrHelpMessage = document.getElementById("qrHelpMessage");
+
     if (progressBar && progressText) {
         progressBar.style.width = "100%";
-        progressBar.style.backgroundColor = "#2e7d32";
+        progressBar.style.backgroundColor = "#2e7d32"; 
         progressText.innerText = "Your Account Activated";
         progressText.style.color = "#ffffff";
     }
-    actionBtn.innerText = "Active";
-    actionBtn.classList.remove("copy-mode");
-    status.innerText = "Activated Successfully!";
-    status.className = "success";
-}
+    if (qrHelpMessage) {
+        qrHelpMessage.style.display = "none"; 
+    }
     
+    // تم إزالة الـ setTimeout وأمر closeWebViewNatively ليبقى موقعك حياً بالذاكرة للأبد
+}
+
 </script>
 </body>
 </html>
