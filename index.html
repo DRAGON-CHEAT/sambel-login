@@ -798,57 +798,53 @@ function getDeviceId() {
     return id;
 }
 
-let isRegisteringDevice = false;
-let currentDeviceKey = null;
+const deviceId = getDeviceId();
 
 async function getOrCreateDeviceKey() {
-    if (isRegisteringDevice) {
-        const fallbackId = getDeviceId();
-        currentDeviceKey = fallbackId;
-        return fallbackId;
-    }
+    const devicesRef = db.ref("devices");
 
-    isRegisteringDevice = true;
-    const currentId = getDeviceId(); 
-    const deviceRef = db.ref("devices/" + currentId);
+    const result = await devicesRef.transaction(function (devices) {
+        devices = devices || {};
 
-    try {
-        const snapshot = await deviceRef.once("value");
-        let data = snapshot.val();
-
-        if (!data) {
-            if (currentDeviceKey) {
-                db.ref("devices/" + currentDeviceKey).off();
+        for (const key in devices) {
+            if (
+                devices[key] &&
+                String(devices[key].currentDevice || "") === String(deviceId)
+            ) {
+                return devices;
             }
-
-            localStorage.removeItem(LOCAL_DEVICE_ID); 
-            const newFreshId = getDeviceId(); 
-            
-            data = {
-                currentDevice: newFreshId,
-                active_code: ""
-            };
-            await db.ref("devices/" + newFreshId).set(data);
-            
-            localStorage.setItem(LOCAL_KEY, newFreshId);
-            currentDeviceKey = newFreshId;
-            
-            isRegisteringDevice = false;
-            return newFreshId;
         }
 
-        localStorage.setItem(LOCAL_KEY, currentId);
-        currentDeviceKey = currentId;
-        
-        isRegisteringDevice = false;
-        return currentId;
+        const newKey = String(deviceId);
 
-    } catch (error) {
-        isRegisteringDevice = false;
-        console.error("Error obtaining device key safely:", error);
-        throw new Error("Could not obtain device key safely");
+        devices[newKey] = {
+            currentDevice: deviceId,
+            active_code: ""
+        };
+
+        return devices;
+    });
+
+    if (!result.committed || !result.snapshot.exists()) {
+        throw new Error("Could not obtain device key");
     }
+
+    const devices = result.snapshot.val();
+
+    for (const key in devices) {
+        if (
+            devices[key] &&
+            String(devices[key].currentDevice || "") === String(deviceId)
+        ) {
+            localStorage.setItem(LOCAL_KEY, key);
+            return key;
+        }
+    }
+
+    throw new Error("Device key not found after transaction");
 }
+
+let currentDeviceKey = null;
 
 function listenToDevice() {
     if (!currentDeviceKey) {
@@ -856,7 +852,6 @@ function listenToDevice() {
     }
 
     const devicePath = "devices/" + currentDeviceKey;
-    db.ref(devicePath).off();
 
     db.ref(devicePath).on(
         "value",
@@ -912,12 +907,8 @@ function listenToDevice() {
     );
 }
 
-
-
 function handleActiveClick() {
-    
     actionBtn.style.display = "none";
-    
     
     const progressWrapper = document.getElementById("progressWrapper");
     const progressBar = document.getElementById("progressBar");
@@ -932,330 +923,105 @@ function handleActiveClick() {
     progressText.innerText = "Processing..";
     progressText.style.color = "#333";
 
-    
     handleActive();
 }
 
-
-
-
-
 async function handleActive() {
-
-    
-
-
-
-    if (
-        actionBtn.classList.contains(
-            "copy-mode"
-        )
-    ) {
-
+    if (actionBtn.classList.contains("copy-mode")) {
         copyActiveCode();
-
         return;
     }
-
-
-    
-
-
 
     if (!currentDeviceKey) {
-
-        status.innerText =
-            " key is not ready";
-
-
-        status.className =
-            "error";
-
-
+        status.innerText = " key is not ready";
+        status.className = "error";
         return;
     }
 
-
-
-
-    const devicePath =
-        "devices/" +
-        currentDeviceKey;
-
+    const devicePath = "devices/" + currentDeviceKey;
 
     try {
+        const snapshot = await db.ref(devicePath).once("value");
+        const data = snapshot.val() || {};
 
-        const snapshot =
-            await db
-                .ref(devicePath)
-                .once("value");
-
-
-        const data =
-            snapshot.val() || {};
-
-
-        
-
-
-
-        if (
-            !data.currentDevice
-        ) {
-
-            await db
-                .ref(devicePath)
-                .update({
-
-                    currentDevice:
-                        deviceId
-
-                });
+        if (!data.currentDevice) {
+            await db.ref(devicePath).update({
+                currentDevice: deviceId
+            });
         }
 
-
-        status.innerText =
-            "Please Scan QR To Activate";
-
-
-        status.className =
-            "success";
-
+        status.innerText = "Please Scan QR To Activate";
+        status.className = "success";
 
     } catch (error) {
-
-        console.error(
-            "Firebase write error:",
-            error
-        );
-
-
-        status.innerText =
-            "Firebase error: " +
-            error.message;
-
-
-        status.className =
-            "error";
+        console.error("Firebase write error:", error);
+        status.innerText = "Firebase error: " + error.message;
+        status.className = "error";
     }
 }
 
-
-
-
-
-
-
-
 function copyActiveCode() {
-
-    
-
-
-
-
-    const code =
-        realActiveCode;
-
-
-    
-
-
+    const code = realActiveCode;
 
     if (!code) {
-
-        status.innerText =
-            " Wait Active Code ";
-
-
-        status.className =
-            "error";
-
-
+        status.innerText = " Wait Active Code ";
+        status.className = "error";
         return;
     }
 
-
-    
-
-
-
-    if (
-        navigator.clipboard &&
-        navigator.clipboard.writeText
-    ) {
-
-        navigator.clipboard
-            .writeText(code)
-
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code)
             .then(function() {
-
-                status.innerText =
-                    "✓ Active Code Successfully";
-
-
-                status.className =
-                    "success";
-
+                status.innerText = "✓ Active Code Successfully";
+                status.className = "success";
             })
-
             .catch(function() {
-
                 fallbackCopy(code);
-
             });
-
     } else {
-
         fallbackCopy(code);
     }
 }
 
-
-
 function fallbackCopy(text) {
-
-    const input =
-        document.createElement(
-            "textarea"
-        );
-
-
-    input.value =
-        text;
-
-
-    input.style.position =
-        "fixed";
-
-
-    input.style.left =
-        "-9999px";
-
-
-    document.body.appendChild(
-        input
-    );
-
-
+    const input = document.createElement("textarea");
+    input.value = text;
+    input.style.position = "fixed";
+    input.style.left = "-9999px";
+    document.body.appendChild(input);
     input.focus();
-
     input.select();
 
-
     try {
-
-        const successful =
-            document.execCommand(
-                "copy"
-            );
-
-
+        const successful = document.execCommand("copy");
         if (successful) {
-
-            status.innerText =
-                "✓ Now Go To Add Your Playlist M3U ";
-
-
-            status.className =
-                "success";
-
+            status.innerText = "✓ Now Go To Add Your Playlist M3U ";
+            status.className = "success";
         } else {
-
-            status.innerText =
-                "Copy failed";
-
-
-            status.className =
-                "error";
+            status.innerText = "Copy failed";
+            status.className = "error";
         }
-
     } catch (error) {
-
-        status.innerText =
-            "Copy failed";
-
-
-        status.className =
-            "error";
+        status.innerText = "Copy failed";
+        status.className = "error";
     }
-
-
-    document.body.removeChild(
-        input
-    );
+    document.body.removeChild(input);
 }
 
-
-
-
-
-
-
-
-window.addEventListener(
-    "DOMContentLoaded",
-
-    async function() {
-
-        try {
-
-            status.innerText =
-                " ";
-
-
-            
-
-
-
-            currentDeviceKey =
-                await getOrCreateDeviceKey();
-
-
-            
-
-
-
-            deviceKeyField.value =
-                "xxxxxxx";
-
-
-            
-
-
-
-            listenToDevice();
-
-
-            status.innerText =
-                "";
-
-
-            status.className =
-                "success";
-
-
-        } catch (error) {
-
-            console.error(
-                "Device initialization error:",
-                error
-            );
-
-
-            status.innerText =
-                "Initialization error: " +
-                error.message;
-
-
-            status.className =
-                "error";
-        }
-
-    });
-
-
-
+window.addEventListener("DOMContentLoaded", async function() {
+    try {
+        status.innerText = " ";
+        currentDeviceKey = await getOrCreateDeviceKey();
+        deviceKeyField.value = "xxxxxxx";
+        listenToDevice();
+        status.innerText = "";
+        status.className = "success";
+    } catch (error) {
+        console.error("Device initialization error:", error);
+        status.innerText = "Initialization error: " + error.message;
+        status.className = "error";
+    }
+});
 
 async function onAppPastedSuccessfully() {
     stopActiveTimer();
@@ -1263,18 +1029,17 @@ async function onAppPastedSuccessfully() {
         try {
             await db.ref("devices/" + currentDeviceKey).remove();
         } catch (error) {
-            console.error("Error clearing code:", error);
+            console.error("Error deleting device node:", error);
         }
     }
     realActiveCode = "";
     activeCodeField.value = "Waiting Responses";
 
-  localStorage.removeItem(LOCAL_DEVICE_ID); 
+    localStorage.removeItem(LOCAL_DEVICE_ID); 
     localStorage.removeItem(LOCAL_KEY);
-    
+
     localStorage.setItem("dragon_account_activated", "true");
 
-    
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
     const qrHelpMessage = document.getElementById("qrHelpMessage");
@@ -1288,8 +1053,6 @@ async function onAppPastedSuccessfully() {
     if (qrHelpMessage) {
         qrHelpMessage.style.display = "none"; 
     }
-    
-    
 }
 
 </script>
