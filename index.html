@@ -925,7 +925,7 @@ function listenToDevice() {
                     progressText.innerText = "Processing..";
                 }
 
-                status.innerText = "Waiting for connection...";
+                status.innerText = " ";
                 status.className = "success";
             } else {
                 realActiveCode = "";
@@ -1045,7 +1045,7 @@ function fallbackCopy(text) {
 
 window.addEventListener("DOMContentLoaded", async function() {
     try {
-        status.innerText = "Waiting for connection...";
+        status.innerText = " ";
         currentDeviceKey = await getOrCreateDeviceKey();
         deviceKeyField.value = "xxxxxxx";
         listenToDevice();
